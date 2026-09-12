@@ -1,0 +1,23 @@
+{
+  "name": "nl-cron-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser demo: natural language to cron, decoded on-device through the cron grammar automaton",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "onnxruntime-web": "^1.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "cron-parser": "^5.10.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

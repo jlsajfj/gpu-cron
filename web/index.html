@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plain English to cron</title>
+    <meta
+      name="description"
+      content="A tiny transformer turns plain English into a cron expression, decoded in the browser with the cron grammar masking every token."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header class="head">
+        <div>
+          <h1>Plain English to cron</h1>
+          <p class="sub">
+            A small transformer runs in this tab. The cron grammar masks every token the model
+            is not allowed to emit, so the output is a valid expression by construction.
+          </p>
+        </div>
+        <button id="theme" type="button" class="ghost" aria-label="Switch color theme">
+          Theme
+        </button>
+      </header>
+
+      <form id="ask" method="post" autocomplete="off">
+        <label for="input">Describe the schedule</label>
+        <div class="row">
+          <input
+            id="input"
+            name="input"
+            type="text"
+            placeholder="every weekday at 9am"
+            spellcheck="false"
+            autocapitalize="off"
+          />
+          <button type="submit" class="primary">Get cron</button>
+        </div>
+      </form>
+
+      <div id="examples" class="examples" aria-label="Example requests"></div>
+
+      <section id="error" class="panel error" hidden>
+        <h2 id="error-title">Something went wrong</h2>
+        <p id="error-body"></p>
+      </section>
+
+      <section id="result" class="panel" hidden>
+        <div class="cron-wrap">
+          <code id="cron" class="cron"></code>
+        </div>
+        <h2 class="fires-head">Next 5 fire times</h2>
+        <ul id="fires" class="fires"></ul>
+        <p id="fires-note" class="fires-note"></p>
+        <div id="badges" class="badges"></div>
+      </section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
