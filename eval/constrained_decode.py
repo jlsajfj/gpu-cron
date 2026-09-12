@@ -1,13 +1,8 @@
 """Constrained decoding: logits are masked by the cron automaton at every step.
 
-Nothing here repairs a string after the fact. At each position the automaton reports the
-characters that keep the output on a path to a complete cron expression, every other
-logit is set to -inf, and the argmax is taken over what remains. A decoded string is
-therefore well-formed cron by construction — `is_well_formed` holds for 100% of outputs
-by the same argument that makes it hold for the empty prefix, not by luck.
-
-The same loop runs in the browser (web/src/decode.js) against the ONNX export, which is
-why the automaton exists twice and why grammar/conformance.json pins the two together.
+Nothing here repairs a string after the fact. The same loop runs in the browser
+(web/src/decode.ts) against the ONNX export, which is why the automaton exists twice and
+why grammar/conformance.json pins the two together.
 """
 
 from __future__ import annotations
@@ -56,7 +51,6 @@ class ConstrainedDecoder:
         return sorted(set(ids))
 
     def _mask(self, state, device) -> torch.Tensor:
-        """Boolean (vocab,) tensor: True where the token is legal in `state`."""
         if not self.constrain:
             return torch.ones(self.vocab_size, dtype=torch.bool, device=device)
         cached = self._mask_cache.get(state)
@@ -86,16 +80,17 @@ class ConstrainedDecoder:
         lengths = [len(p) for p in prompts]
         width = max(lengths)
         idx = torch.full((len(prompts), width), PAD, dtype=torch.long, device=device)
+        valid = torch.zeros((len(prompts), width), dtype=torch.bool, device=device)
         for row, prompt in enumerate(prompts):
-            idx[row, : len(prompt)] = torch.tensor(prompt, dtype=torch.long, device=device)
+            idx[row, width - len(prompt) :] = torch.tensor(prompt, dtype=torch.long, device=device)
+            valid[row, width - len(prompt) :] = True
 
         states = [self.automaton.start() for _ in texts]
         emitted: list[list[str]] = [[] for _ in texts]
         done = [False] * len(texts)
 
-        logits = self.model(idx)  # (batch, width, vocab)
-        last = logits[torch.arange(len(prompts)), torch.tensor(lengths, device=device) - 1, :]
-        step_logits = last
+        logits = self.model(idx, position_ids=self._positions(valid), valid_mask=valid)
+        step_logits = logits[:, width - 1, :]
 
         for _ in range(self.max_new):
             if all(done):
@@ -117,9 +112,8 @@ class ConstrainedDecoder:
                     done[row] = True
                     continue
                 if not self.constrain:
-                    # Unconstrained runs measure what the raw model emits, so the automaton
-                    # is not consulted at all — walking it here would reject the illegal
-                    # characters this mode exists to observe.
+                    # Unconstrained mode measures what the raw model emits; walking the
+                    # automaton here would reject the illegal characters it exists to observe.
                     emitted[row].append(chr(token))
                     continue
                 ch = chr(token)
@@ -128,13 +122,20 @@ class ConstrainedDecoder:
                     raise AssertionError(f"automaton rejected its own allowed character {ch!r}")
                 emitted[row].append(ch)
             idx = torch.cat([idx, nxt.view(-1, 1)], dim=1)
-            step_logits = self.model(idx[:, -self.model.cfg.max_len :])[:, -1, :]
+            valid = torch.cat([valid, torch.ones_like(nxt.view(-1, 1), dtype=torch.bool)], dim=1)
+            keep = idx[:, -self.model.cfg.max_len :]
+            valid = valid[:, -self.model.cfg.max_len :]
+            step_logits = self.model(keep, position_ids=self._positions(valid), valid_mask=valid)[:, -1, :]
 
-        # Running out of budget is a real outcome (the model can emit a long list), so it
-        # is counted and reported rather than asserted away.
+        # Truncation is a real outcome (the model can emit a long list), not a bug.
         self.stats["truncated"] += done.count(False)
         self.model.train(was_training)
         return ["".join(chars) for chars in emitted]
+
+    @staticmethod
+    def _positions(valid: torch.Tensor) -> torch.Tensor:
+        """Number each row's real tokens from zero, ignoring its padding."""
+        return (valid.long().cumsum(-1) - 1).clamp(min=0)
 
     def _pick(self, masked: torch.Tensor) -> torch.Tensor:
         if self.temperature <= 0:
