@@ -1,0 +1,11 @@
+# CPU training path. torch must come from the CPU wheel index on aarch64:
+#   python -m venv .venv
+#   .venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   .venv/bin/pip install -r requirements.txt
+numpy>=2.0
+
+# ONNX export for the browser demo (export/export_onnx.py). onnxscript is required by
+# torch's exporter, not by onnx itself.
+onnx>=1.22
+onnxruntime>=1.30
+onnxscript>=0.7

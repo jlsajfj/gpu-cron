@@ -1,0 +1,12 @@
+{
+  "comment": "Overnight-on-CPU default: ~25M params, trained from scratch on the box's 16 ARM cores.",
+  "d_model": 512,
+  "n_layer": 8,
+  "n_head": 8,
+  "d_ff": 2048,
+  "max_len": 192,
+  "dropout": 0.0,
+  "batch_size": 64,
+  "lr": 0.003,
+  "steps": 6000
+}

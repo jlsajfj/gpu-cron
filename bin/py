@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# The pip torch wheel is a manylinux build and needs a real libstdc++; nix's python
+# doesn't put one on the default search path. Every entry point goes through here.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export LD_LIBRARY_PATH="/nix/store/pjnjsjr5l7qgc5qlhldjgafxsn6b5pmx-ld-library-path/share/nix-ld/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$ROOT/.venv/bin/python" "$@"

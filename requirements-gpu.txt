@@ -1,0 +1,5 @@
+# The SmolLM2-135M fine-tune path (train/finetune_smollm2.py). Not needed for the default
+# from-scratch CPU run, and not exercised on the box (no GPU).
+torch>=2.4
+transformers>=4.45
+peft>=0.13
