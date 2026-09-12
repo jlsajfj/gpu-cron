@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// Bundles the demo into web/dist: app.js (automaton + decoder + UI), the base64 int8 model,
-// the ONNX Runtime wasm assets, index.html and anything in web/public.
+// Bundles the demo into web/dist: app.js, the inlined int8 model, ORT's wasm assets, index.html.
 
 import { context } from 'esbuild';
 import { watch as watchFs } from 'node:fs';
@@ -44,8 +43,8 @@ function options() {
   };
 }
 
-// The model is inlined so the page needs no fetch of its own, and a missing model still
-// builds: the generated module reports it absent and the app shows the no-onnx panel.
+// The model is inlined so the page needs no fetch of its own; a missing model still builds —
+// the generated module reports it absent and the app shows the no-onnx panel.
 async function writeWeights() {
   const name = path.relative(ROOT, MODEL);
   const out = path.join(DIST, WEIGHTS);

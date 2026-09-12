@@ -36,8 +36,6 @@ export function allowedIds(automaton: CronAutomaton, state: State): Set<number> 
   return out;
 }
 
-// Every id the grammar forbids becomes -Infinity, so argmax can only ever pick a token
-// that keeps the string on a path to a complete cron expression.
 export function maskLogits(logits: Float32Array, allowed: ReadonlySet<number>): Float32Array {
   const masked = new Float32Array(logits);
   for (let id = 0; id < masked.length; id += 1) {
@@ -65,9 +63,8 @@ export async function decode(
   options: DecodeOptions = {},
 ): Promise<DecodeResult> {
   const automaton = options.automaton ?? defaultAutomaton();
-  // Every legal move adds one character and the budget gate caps them at maxLength, so
-  // this bound is never what ends a decode.
-  const maxNew = options.maxNew ?? automaton.grammar.maxLength;
+  // Each legal move adds one character, capped at maxLength by the budget gate; the +1 is EOS.
+  const maxNew = options.maxNew ?? automaton.grammar.maxLength + 1;
   const now = options.now ?? (() => performance.now());
 
   const promptIds = encodePrompt(text);
@@ -85,8 +82,7 @@ export async function decode(
       throw new Error(`logits width ${raw.length}, expected ${VOCAB_SIZE}`);
     }
     const allowed = allowedIds(automaton, state);
-    // The completion-length gate keeps allowed() non-empty at every reachable state, so an
-    // empty set here means the automaton has drifted from its own invariant.
+    // The budget gate keeps allowed() non-empty at every reachable state; empty is a bug.
     if (allowed.size === 0) {
       throw new Error(`automaton allowed no move from field ${state.field} ${JSON.stringify(state.text)}`);
     }

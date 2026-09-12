@@ -62,8 +62,8 @@ export function parseCronExpression(cron: string): ParsedCron | null {
   };
 }
 
-// Cron's day rule: when both day fields are restricted either one may match (an OR), and
-// when one is a bare star the other is the only one that can veto.
+// Cron's day rule: with both DOM and DOW restricted either may match (OR); a bare star
+// makes the other field the only veto.
 function dayMatches(parsed: ParsedCron, date: Date): boolean {
   const domMatch = parsed.dom.has(date.getDate());
   const dowMatch = parsed.dow.has(date.getDay());
@@ -73,8 +73,8 @@ function dayMatches(parsed: ParsedCron, date: Date): boolean {
   return domMatch || dowMatch;
 }
 
-// Wall-clock local enumeration on minute boundaries: 8 years of days covers every date a
-// 5-field expression can name, Feb 29 included.
+// Local wall-clock enumeration; 8 years of days covers every date a 5-field expression can
+// name, Feb 29 included.
 export function nextFireTimes(cron: string, count = 5, from: Date = new Date()): Date[] {
   const parsed = parseCronExpression(cron);
   if (parsed === null || count <= 0) return [];

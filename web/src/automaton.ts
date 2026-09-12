@@ -2,7 +2,6 @@ import { defaultGrammar, type FieldSpec, type Grammar } from './grammar.js';
 
 export const EOS = '\u0000';
 
-// The grammar alphabet without the field separator: what a field may be extended with.
 export const ALPHABET_CHARS = defaultGrammar().alphabet.replace(/ /g, '');
 
 export interface State {
@@ -16,7 +15,6 @@ export interface FieldState {
   readonly canEnd: boolean;
 }
 
-// One of the five space-separated fields: term (',' term)*, term := '*' ['/' step] | value ['-' value] ['/' step].
 function isDigit(c: string): boolean {
   return c >= '0' && c <= '9';
 }
@@ -72,8 +70,8 @@ export function expand(term: string, spec: FieldSpec): Set<number> | null {
   return null;
 }
 
-// List terms must be strictly ascending and non-overlapping: a start above the running
-// maximum is enough, because every term's values lie within [start, field max].
+// Lists must be strictly ascending and non-overlapping; a start above the running maximum
+// is enough, since a term's values all lie within [start, field max].
 export function startOk(term: string, threshold: number | null, spec: FieldSpec): boolean {
   if (threshold === null) return true;
   if (term.length > 0 && term[0] === '*') return false;
@@ -120,17 +118,16 @@ export function listOk(s: string, spec: FieldSpec, trailingComplete: boolean): b
 const fieldStateCache = new Map<string, FieldState>();
 const completionCache = new Map<string, number>();
 
-// Both caches are bounded the way the Python automaton's lru_cache is: the breadth-first
-// search below probes far more partial fields than the reachable state space holds.
+// Bounded like the Python automaton's lru_cache: the breadth-first search probes far more
+// partial fields than the reachable state space holds.
 function cacheSet<K, V>(cache: Map<K, V>, key: K, value: V, max: number): void {
   if (cache.size >= max) cache.clear();
   cache.set(key, value);
 }
 
-// Fewest characters to append to `text` to reach a complete valid field, searched breadth
-// first so the usual answers (0 or 1) cost a handful of memoised field_state calls. Only
-// extensions that are still prefixes are carried forward: a field whose parse has already
-// failed stays failed however it grows, and canEnd implies isPrefix.
+// Fewest characters to append to reach a complete valid field, breadth first so the usual
+// answers (0 or 1) are cheap. Only still-valid prefixes are carried forward: a failed parse
+// stays failed however it grows.
 export function fieldCompletionLen(text: string, spec: FieldSpec, maxExtra = 3): number {
   const key = `${spec.name}\u0000${text}\u0000${maxExtra}`;
   const hit = completionCache.get(key);
@@ -311,10 +308,9 @@ export class CronAutomaton {
     return { field: 0, text: '', total: 0 };
   }
 
-  // Length of the shortest completion that actually exists: a field hanging on a comma has
-  // to open *and* close its next term, which can take two digits. Gating allowed() on this
-  // keeps completionLen(state) <= remaining budget at every reachable state, so the length
-  // cap can never strand the decoder mid-field and allowed() there is never empty.
+  // Length of the shortest completion that exists: a field hanging on a comma must open
+  // *and* close its next term, which can take two digits. Gating allowed() on this keeps
+  // completionLen(state) <= remaining budget at every reachable state.
   completionLen(state: { field: number; text: string }): number {
     const last = this.grammar.fields.length - 1;
     const spec = this.grammar.fields[state.field] as FieldSpec;

@@ -112,8 +112,7 @@ export async function loadRuntime(): Promise<RuntimeResult> {
         if (failed !== null) throw new Error(failed.message);
         const input = new BigInt64Array(ids.length);
         for (let i = 0; i < ids.length; i += 1) input[i] = BigInt(ids[i] as number);
-        // The graph returns the last position's logits only, and the model is small enough
-        // that re-running the whole prefix each step beats the complexity of a KV cache.
+        // The graph returns last-position logits only; re-running the prefix beats a KV cache.
         const output = await session.run({ [inputName]: new ort.Tensor('int64', input, [1, ids.length]) });
         const data = output[outputName]?.data;
         if (!(data instanceof Float32Array) || data.length !== VOCAB_SIZE) {

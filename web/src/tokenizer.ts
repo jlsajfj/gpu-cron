@@ -5,7 +5,6 @@ export const VOCAB_SIZE = 259;
 
 export const PROMPT_SUFFIX = ' => ';
 
-// The model is trained on bytes, so the prompt is BOS followed by the UTF-8 of "text => ".
 export function encodePrompt(text: string): number[] {
   return [BOS, ...new TextEncoder().encode(text + PROMPT_SUFFIX)];
 }

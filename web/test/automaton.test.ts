@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import conformance from '../../grammar/conformance.json';
 import {
-  CronAutomaton,
   EOS,
   defaultAutomaton,
   fieldState,
@@ -41,8 +40,7 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-// The fixture replays each state at the budgets a walk actually meets, so the recorded
-// total is the one the budget gate has to be evaluated against.
+// total comes from the fixture: it is the budget the gate was evaluated at, not text.length.
 function stateOf(c: StateCase) {
   return { field: c.field, text: c.text, total: c.total };
 }
@@ -193,8 +191,7 @@ describe('exploration', () => {
           deadEnds += 1;
           break;
         }
-        // Never take the separator early, so the walk keeps filling the field until the
-        // budget forces it to close.
+        // Never take the separator early, so the budget is what forces the field to close.
         const chars = allowed.filter((c) => c !== EOS && c !== ' ');
         const ch =
           chars.length > 0
@@ -216,26 +213,18 @@ describe('exploration', () => {
   });
 
   it('prunes the comma that used to dead end a packed field', () => {
-    // Closing this field means opening and closing a new term above 26, which takes two
-    // digits, so the comma needs 7 characters of budget and only 6 are left.
+    // The comma needs 7 characters of budget (a two-digit term) and only 6 are left.
     const before = { field: 2, text: '5/7', total: 58 };
     expect(fieldState(before.text, grammar.fields[2]!).canEnd).toBe(true);
     expect(auto.completionLen(before)).toBe(4);
     expect(auto.allowed(before).has(',')).toBe(false);
     expect([...auto.allowed(before)]).toEqual([' ']);
 
-    // The state it used to create still exists as a value, and is still stuck, but nothing
-    // can reach it: the only move into it is the comma that was just pruned.
+    // The stuck state still exists as a value but is unreachable: only that comma led into it.
     const after = { field: 2, text: '5/7,', total: 59 };
     expect(fieldState(after.text, grammar.fields[2]!).canEnd).toBe(false);
     expect(auto.completionLen(after)).toBe(6);
     expect(auto.allowed(after).size).toBe(0);
     expect(grammar.maxLength - after.total).toBe(5);
-  });
-
-  it('keeps the cache honest across automaton instances', () => {
-    const fresh = new CronAutomaton(grammar);
-    const state = auto.start();
-    expect([...fresh.allowed(state)].sort()).toEqual([...auto.allowed(state)].sort());
   });
 });

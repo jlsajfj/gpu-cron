@@ -77,8 +77,7 @@ describe('nextFireTimes', () => {
       localTime(2026, 1, 5, 0, 0),
       localTime(2026, 1, 7, 0, 0),
     ]);
-    // Both day fields are restricted, so the day of month wins on the 1st and the day of
-    // week on every Monday: the OR rule, not the AND.
+    // Both day fields restricted: the OR rule, so the 1st and every Monday both fire.
     expect(times('0 0 1 * 1', 3)).toEqual([
       localTime(2026, 1, 5, 0, 0),
       localTime(2026, 1, 12, 0, 0),

@@ -43,7 +43,6 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-// A fake that reads off one fixed expression, one character per call.
 function follow(target: string): LogitsFn {
   let position = 0;
   return async () => {
@@ -150,8 +149,7 @@ describe('constrained decoding', () => {
   });
 
   it('steers away from a prefix the automaton will not let it finish', async () => {
-    // The comma cannot be closed inside the remaining budget, so the automaton prunes it and
-    // the fake is forced onto a different, completable last field.
+    // The comma cannot close inside the budget, so the fake is forced onto a completable field.
     const packed = '7/42,50-52,54-55/20,57/16,58,59-59/36 8,19-22,23-23/11 5/7,';
     const result = await decode('x', follow(packed));
     expect(result.text).not.toBe(packed);
