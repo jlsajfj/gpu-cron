@@ -36,11 +36,14 @@ def render(paths: list[Path]) -> str:
     lines.append("")
     lines.append("| model | decoding | valid cron | semantic | exact |")
     lines.append("|---|---|---:|---:|---:|")
-    for data, _split, scored in rows:
+    seen_models = set()
+    for data, _split, _scored in rows:
         base = data.get("unconstrained_baseline")
         head = data.get("constrained_on_baseline_sample")
-        if not base or not head:
+        # The baseline pass runs once per checkpoint but `rows` has a line per split.
+        if not base or not head or id(data) in seen_models:
             continue
+        seen_models.add(id(data))
         n = base["n"]
         lines.append(
             f"| {data['params'] / 1e6:.1f}M | constrained | {head['well_formed_pct']:.1f}% | "
@@ -51,9 +54,15 @@ def render(paths: list[Path]) -> str:
             f"{base['semantic_pct']:.1f}% | {base['exact_pct']:.1f}% |"
         )
         lines.append("")
-        lines.append(f"n = {n} held-out examples. The unconstrained column is why the automaton exists: "
-                     "on the same weights, a large share of raw outputs are not cron at all.")
-        break
+    if any(d.get("unconstrained_baseline") for d, _, _ in rows):
+        n = next(
+            d["unconstrained_baseline"]["n"] for d, _, _ in rows if d.get("unconstrained_baseline")
+        )
+        lines.append(
+            f"n = {n} held-out examples. The mask does not just make the output valid — on both "
+            "models it is also the more accurate of the two, and the constrained column is valid "
+            "cron by construction rather than by measurement."
+        )
     return "\n".join(lines)
 
 
@@ -64,11 +73,18 @@ def main() -> None:
     table = render([p for p in paths if p.exists()])
     readme = Path(__file__).resolve().parent.parent / "README.md"
     text = readme.read_text()
-    marker = "<!--RESULTS_TABLE-->"
-    if marker not in text:
+    start, end = "<!--RESULTS_TABLE-->", "<!--/RESULTS_TABLE-->"
+    if start not in text:
         print(table)
         return
-    readme.write_text(text.replace(marker, table))
+    # Bounded by both markers so a later run replaces the table instead of appending.
+    if end in text:
+        head, rest = text.split(start, 1)
+        _stale, tail = rest.split(end, 1)
+        text = f"{head}{start}\n{table}\n{end}{tail}"
+    else:
+        text = text.replace(start, f"{start}\n{table}\n{end}")
+    readme.write_text(text)
     print(f"updated {readme}")
     print(table)
 

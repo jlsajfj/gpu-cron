@@ -15,12 +15,31 @@ the page — no server, no API call, no post-processing.
 ## Results
 
 <!--RESULTS_TABLE-->
+| model | split | n | semantic | exact | valid | fires |
+|---|---|---:|---:|---:|---:|---:|
+| 25.4M | test (unseen expression) | 1,200 | **42.5%** | 37.4% | 100.0% | 100.0% |
+| 25.4M | holdout (unseen phrasing, seen expression) | 1,200 | **34.1%** | 29.8% | 100.0% | 100.0% |
+| 3.3M | test (unseen expression) | 1,200 | **27.0%** | 23.2% | 100.0% | 100.0% |
+| 3.3M | holdout (unseen phrasing, seen expression) | 1,200 | **18.8%** | 16.3% | 100.0% | 100.0% |
+
+Same weights, mask on vs. off, on the same held-out examples:
+
+| model | decoding | valid cron | semantic | exact |
+|---|---|---:|---:|---:|
+| 25.4M | constrained | 100.0% | 42.5% | 37.4% |
+| 25.4M | unconstrained | 92.4% | 39.6% | 35.2% |
+
+| 3.3M | constrained | 100.0% | 27.0% | 23.2% |
+| 3.3M | unconstrained | 86.4% | 25.3% | 21.8% |
+
+n = 1200 held-out examples. The mask does not just make the output valid — on both models it is also the more accurate of the two, and the constrained column is valid cron by construction rather than by measurement.
+<!--/RESULTS_TABLE-->
 
 ## Why constrained decoding
 
-An unconstrained model of this size emits malformed cron regularly — `*/5 * * 1-5`,
-`0 9 * * 8`, `0 25 * * *`, trailing junk. The usual fix is to repair the string
-afterwards with a regex. This project does not do that: at every decoding step an
+Left alone, these models emit malformed cron 8-14% of the time depending on size — a field
+count that is off, an hour of 25, day-of-week 8, or trailing junk. The usual fix is to
+repair the string afterwards with a regex. This project does not do that: at every step an
 automaton over the cron grammar reports the characters that keep the output on a path
 to a complete expression, every other logit is set to `-inf`, and the argmax is taken
 over what remains.
@@ -161,6 +180,18 @@ GPU. It is **not** the default, **nothing in the tested path depends on it**, an
 not been executed on the box (no GPU, and `transformers` is not installed) — treat it as
 a starting point, not a verified path.
 
+### What was actually run
+
+Both models were trained on the box for this README, in `--bf16` mode (bfloat16 autocast is
+about 1.6x faster than fp32 on the Neoverse-V2 cores):
+
+| model | steps | epochs | wall clock | final val loss |
+|---|---:|---:|---:|---:|
+| default (~25M) | 3,000 | 1.6 | ~70 min | 0.179 |
+| mini (~3M) | 3,000 | 3.1 | ~55 min | 0.271 |
+
+Eval numbers above are on the first 1,200 examples of each split, not the whole split.
+
 NixOS note: the manylinux torch wheel needs a real `libstdc++.so.6`, which nix's Python
 does not put on the default search path. `bin/py` is a two-line wrapper that sets
 `LD_LIBRARY_PATH`; every Python entry point goes through it.
@@ -235,6 +266,13 @@ the same cron string from two different buckets (a `1-5` day-of-week range is re
 both as "weekdays" and as a plain range), so 2.8% of val and 2.1% of test expressions also
 appear in training. No (phrasing, cron) pair appears in two splits. The effect is small
 but it means the held-out numbers are a slight over-estimate.
+
+**The browser model is quantized, so it is not bit-identical to the Python one.** The
+export was checked against torch on 150 held-out prompts: the fp32 ONNX graph reproduces
+torch's output exactly (150/150), and the int8 graph that the demo actually ships agrees on
+145/150 (96.7%). The five disagreements are argmax flips from quantization error, and they
+are why a prompt can read differently on the page than in the eval table. int8 is a
+deliberate trade: it is 3.8x smaller (3.5 MB vs 13.3 MB, and 4.5 MB more once base64-inlined).
 
 **The browser bundle is heavy.** `onnxruntime-web` plus its wasm runtime is ~27MB in
 `dist/`, far more than the model itself. Inlining the weights was the goal here; a

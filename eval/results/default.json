@@ -1,6 +1,6 @@
 {
-  "checkpoint": "runs/mini/checkpoint.pt",
-  "params": 3263488,
+  "checkpoint": "runs/default/checkpoint.pt",
+  "params": 25405440,
   "step": 2999,
   "splits": {
     "test": {
@@ -8,38 +8,38 @@
       "well_formed_pct": 100.0,
       "parses_pct": 100.0,
       "fires_pct": 100.0,
-      "exact_pct": 23.25,
-      "semantic_pct": 27.0,
+      "exact_pct": 37.42,
+      "semantic_pct": 42.5,
       "by_bucket": {
         "hour-range-step": {
           "n": 313,
-          "semantic_pct": 13.1,
-          "exact_pct": 5.75
+          "semantic_pct": 35.14,
+          "exact_pct": 23.96
         },
         "dow-range": {
           "n": 251,
-          "semantic_pct": 50.2,
-          "exact_pct": 49.4
+          "semantic_pct": 47.01,
+          "exact_pct": 45.82
         },
         "month-range": {
           "n": 204,
-          "semantic_pct": 1.96,
-          "exact_pct": 1.96
+          "semantic_pct": 14.22,
+          "exact_pct": 13.24
         },
         "month-list": {
           "n": 180,
-          "semantic_pct": 59.44,
-          "exact_pct": 59.44
+          "semantic_pct": 83.89,
+          "exact_pct": 83.89
         },
         "monthly-on-dom-range": {
           "n": 135,
-          "semantic_pct": 17.04,
-          "exact_pct": 2.22
+          "semantic_pct": 36.3,
+          "exact_pct": 20.74
         },
         "yearly": {
           "n": 117,
-          "semantic_pct": 19.66,
-          "exact_pct": 19.66
+          "semantic_pct": 45.3,
+          "exact_pct": 45.3
         }
       },
       "truncated": 0,
@@ -50,38 +50,38 @@
       "well_formed_pct": 100.0,
       "parses_pct": 100.0,
       "fires_pct": 100.0,
-      "exact_pct": 16.33,
-      "semantic_pct": 18.83,
+      "exact_pct": 29.83,
+      "semantic_pct": 34.08,
       "by_bucket": {
         "hour-range-step": {
           "n": 299,
-          "semantic_pct": 6.35,
-          "exact_pct": 2.68
+          "semantic_pct": 22.07,
+          "exact_pct": 12.37
         },
         "dow-range": {
           "n": 257,
-          "semantic_pct": 37.35,
-          "exact_pct": 36.96
+          "semantic_pct": 38.52,
+          "exact_pct": 38.13
         },
         "yearly": {
           "n": 168,
-          "semantic_pct": 12.5,
-          "exact_pct": 12.5
+          "semantic_pct": 38.1,
+          "exact_pct": 38.1
         },
         "monthly-on-dom-range": {
           "n": 162,
-          "semantic_pct": 12.96,
-          "exact_pct": 1.85
+          "semantic_pct": 34.57,
+          "exact_pct": 22.84
         },
         "month-list": {
           "n": 161,
-          "semantic_pct": 33.54,
-          "exact_pct": 33.54
+          "semantic_pct": 60.25,
+          "exact_pct": 60.25
         },
         "month-range": {
           "n": 153,
-          "semantic_pct": 9.8,
-          "exact_pct": 9.8
+          "semantic_pct": 17.65,
+          "exact_pct": 16.34
         }
       },
       "truncated": 0,
@@ -90,14 +90,14 @@
   },
   "unconstrained_baseline": {
     "n": 1200,
-    "parses_pct": 86.42,
-    "exact_pct": 21.75,
-    "semantic_pct": 25.33
+    "parses_pct": 92.42,
+    "exact_pct": 35.25,
+    "semantic_pct": 39.58
   },
   "constrained_on_baseline_sample": {
     "n": 1200,
     "well_formed_pct": 100.0,
-    "exact_pct": 23.25,
-    "semantic_pct": 27.0
+    "exact_pct": 37.42,
+    "semantic_pct": 42.5
   }
 }
