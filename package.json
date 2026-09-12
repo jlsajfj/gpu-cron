@@ -1,0 +1,24 @@
+{
+  "name": "nl-cron",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlsajfj/nl-cron.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jlsajfj/nl-cron/issues"
+  },
+  "homepage": "https://github.com/jlsajfj/nl-cron#readme",
+  "dependencies": {
+    "cron-parser": "^5.10.0",
+    "cronstrue": "^3.26.0"
+  }
+}
