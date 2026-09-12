@@ -1,10 +1,4 @@
-"""Property tests for the cron automaton.
-
-The claim under test is "well-formed by construction". It is checked three ways: the
-whole training corpus must be accepted, a hand-picked set of near-miss strings must be
-rejected, and random walks through `allowed()` must produce strings that cron-parser
-independently agrees are real cron expressions.
-"""
+"""The automaton accepts the corpus, rejects near misses, and never dead-ends on a walk."""
 
 from __future__ import annotations
 
@@ -17,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "eval"))
 
-from cron_automaton import EOS, default_automaton, is_well_formed, parse_cron  # noqa: E402
+from cron_automaton import EOS, default_automaton, is_well_formed  # noqa: E402
 
 from cron_semantics import CronService  # noqa: E402
 
@@ -28,10 +22,44 @@ class TestAutomaton(unittest.TestCase):
         cls.auto = default_automaton()
         cls.grammar = cls.auto.grammar
 
-    def test_accepts_every_corpus_expression(self) -> None:
+    def test_matches_conformance_fixture(self) -> None:
+        """Replay the frozen fixture through Python as well as the browser.
+
+        The fixture is *generated* from this automaton, so without a Python-side replay
+        editing the automaton and forgetting `make conformance` leaves the TypeScript suite
+        green against a stale recording while the two implementations have diverged — the
+        exact failure the fixture exists to prevent.
+        """
+        fixture = json.loads((ROOT / "grammar" / "conformance.json").read_text())
+        self.assertEqual(len(fixture["states"]), 12500)
+        mismatches = []
+        for case in fixture["states"]:
+            state = (case["field"], case["text"], case["total"])
+            allowed = self.auto.allowed(state)
+            got = "".join(sorted(c for c in allowed if c != EOS))
+            if got != case["allowed"] or (EOS in allowed) != case["canEnd"]:
+                mismatches.append(case)
+            if self.auto.completion_len((case["field"], case["text"])) != case["completionLen"]:
+                mismatches.append(case)
+        self.assertEqual(mismatches[:3], [], f"{len(mismatches)} fixture states disagree")
+        for case in fixture["expressions"]:
+            with self.subTest(text=case["text"]):
+                self.assertEqual(is_well_formed(case["text"], self.auto), case["wellFormed"])
+
+    def test_accepts_corpus_fixture(self) -> None:
+        """The committed fixture covers every generation bucket, so this runs on a fresh
+        clone — `data/out/` is gitignored and the full-corpus check below silently skipped
+        there, which is exactly where the automaton's coverage most needs pinning."""
+        fixture = ROOT / "tests" / "fixtures" / "corpus.txt"
+        crons = [c for c in fixture.read_text().splitlines() if c.strip()]
+        self.assertGreater(len(crons), 100)
+        bad = [c for c in crons if not is_well_formed(c, self.auto)]
+        self.assertEqual(bad[:5], [], f"{len(bad)} corpus expressions rejected by the automaton")
+
+    def test_accepts_full_corpus_when_generated(self) -> None:
         path = ROOT / "data" / "out" / "canonical.jsonl"
         if not path.exists():
-            self.skipTest("canonical.jsonl not generated yet")
+            self.skipTest("data/out not generated; the committed fixture covers this case")
         crons = [json.loads(l)["cron"] for l in path.read_text().splitlines() if l.strip()]
         bad = [c for c in crons if not is_well_formed(c, self.auto)]
         self.assertEqual(bad[:5], [], f"{len(bad)} corpus expressions rejected by the automaton")
@@ -42,33 +70,33 @@ class TestAutomaton(unittest.TestCase):
             "*",
             "* * * *",
             "* * * * * *",
-            "60 * * * *",  # minute out of range
-            "0 24 * * *",  # hour out of range
-            "0 0 0 * *",  # dom below 1
-            "0 0 32 * *",  # dom above 31
-            "0 0 * 13 *",  # month above 12
+            "60 * * * *",
+            "0 24 * * *",
+            "0 0 0 * *",
+            "0 0 32 * *",
+            "0 0 * 13 *",
             "0 0 * * 7",  # dow 7 is real cron but not in this dialect
-            "*/0 * * * *",  # step must be >= 1
+            "*/0 * * * *",
             "*/-1 * * * *",
             "1- * * * *",
             "-5 * * * *",
-            "5-2 * * * *",  # reversed range
+            "5-2 * * * *",
             "1,,2 * * * *",
             "1, * * * *",
             "*, * * * *",
             "1/ * * * *",
             "*/ * * * *",
-            " 1 * * * *",  # leading space
-            "1 * * * * ",  # trailing space
-            "1  * * * *",  # double space
+            " 1 * * * *",
+            "1 * * * * ",
+            "1  * * * *",
             "1 * * * *x",
             "1 * * * 1-5/two",
             "a * * * *",
             "1 * * * * *",
             "31 0 0 0 0",
-            "0 0 5-10 * 1",  # fine syntactically; DOM+DOW is a semantics policy, not syntax
+            "0 0 5-10 * 1",
         ]
-        # The DOM+DOW combined form is deliberately allowed: it parses, it just means OR.
+        # Last entry is the deliberate exception: DOM+DOW parses, it just means OR.
         for text in invalid[:-1]:
             with self.subTest(text=text):
                 self.assertFalse(is_well_formed(text, self.auto), f"should reject {text!r}")
@@ -93,8 +121,7 @@ class TestAutomaton(unittest.TestCase):
                 self.assertIsNotNone(nxt)
                 if nxt not in seen and len(frontier) < 20000:
                     frontier.append(nxt)
-        # EOS is the one legal move that ends the expression; the terminal state it leads
-        # to is the sole state allowed to have no successors.
+        # EOS leads to the terminal state, the one place an empty allowed() is correct.
         state = self.auto.start()
         for ch in "* * * * *":
             state = self.auto.advance(state, ch)
@@ -108,14 +135,7 @@ class TestAutomaton(unittest.TestCase):
         self.assertGreater(len(seen), 500, "exploration was too shallow to prove anything")
 
     def test_adversarial_walks_never_dead_end(self) -> None:
-        """Greedily burn the length budget and check the gate always leaves a move.
-
-        A uniform random walk almost never wanders into the length cap, which is exactly
-        where the budget gate lives — an earlier version of `completionLen` was wrong there
-        and a random walk never found it. At each step this picks the legal move that
-        leaves the *largest* remaining completion, i.e. the one that spends the most of the
-        budget, so it drives straight at the corner.
-        """
+        """Burns the length budget on purpose; a uniform walk never reaches the cap."""
         rng = random.Random(23)
         for _ in range(400):
             state = self.auto.start()
@@ -146,7 +166,12 @@ class TestAutomaton(unittest.TestCase):
             )
 
     def test_exhaustive_reachability_has_no_dead_ends(self) -> None:
-        """Breadth-first over everything reachable, asserting a move always exists."""
+        """Walk reachable states until the budget runs out, asserting a move always exists.
+
+        The frontier is popped depth-first and capped, so this samples reachable states
+        rather than proving the whole space; `exploration` in the browser suite makes the
+        same trade.
+        """
         seen = {self.auto.start()}
         frontier = [self.auto.start()]
         checked = 0
@@ -189,15 +214,9 @@ class TestAutomaton(unittest.TestCase):
         self.assertEqual(len(results), len(walks))
         broken = [v["cron"] for v in results if not v["parses"]]
         self.assertEqual(broken[:5], [], f"{len(broken)} walks produced cron-parser rejects")
-        # Feb-30-style expressions are syntactically fine but never fire; the grammar allows
-        # the shape and the decoder's post-hoc check is what catches it, so those are counted
-        # rather than asserted to be zero.
+        # Feb-30-style dates parse but never fire; counted, not asserted to be zero.
         never_fires = [v["cron"] for v in results if not v["fires"]]
         self.assertLess(len(never_fires), len(walks) * 0.02, f"too many non-firing: {never_fires[:5]}")
-
-    def test_field_count(self) -> None:
-        for text in ["* * * * *", "0 9 * * 1-5", "*/5 0-23/2 1,15 1-6 0"]:
-            self.assertEqual(len(parse_cron(text)), 5)
 
 
 if __name__ == "__main__":

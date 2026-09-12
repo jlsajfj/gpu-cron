@@ -1,10 +1,4 @@
-"""End-to-end smoke test: train for a few steps, then decode with the mask on.
-
-This is the only test that exercises the whole path — data encoding, the training loop,
-checkpoint save/load, and the constrained decoder against a real (if barely trained)
-model. It asserts structure, not quality: the model is far too undertrained to produce
-correct schedules, but it must still only ever emit well-formed cron.
-"""
+"""The only test over the whole path: data, training loop, checkpoint, constrained decode."""
 
 from __future__ import annotations
 
@@ -96,9 +90,7 @@ class TestTrainingSmoke(unittest.TestCase):
             self.assertEqual(decoder.stats["truncated"], 0, "encoding is far too long")
 
     def test_labels_are_next_token_shifted(self) -> None:
-        """A causal model can see ids[i] at position i but not ids[i+1]; if labels line up
-        with ids instead of ids shifted by one, the task degenerates to copying and loss
-        goes to zero without the model learning the mapping."""
+        """labels[i] must be ids[i+1]: lined up with ids[i] the task is copying, not mapping."""
         from data import encode_example
 
         ids, labels = encode_example("every day at 9am", "0 9 * * *")
@@ -109,6 +101,36 @@ class TestTrainingSmoke(unittest.TestCase):
             self.assertEqual(labels[i], ids[i + 1], f"label at {i} is not ids[i+1]")
         self.assertEqual(chr(labels[labelled[0]]), "0")
         self.assertEqual(labels[-1], -100, "nothing to predict after the end")
+
+    def test_batched_decode_matches_one_at_a_time(self) -> None:
+        """Padding must not change an answer.
+
+        A batched decode of unequal-length prompts pads them, and the model never saw a real
+        token follow a PAD in training, so a padded batch can quietly decode differently from
+        the one-row-at-a-time case the browser runs. Prompt lengths here are deliberately
+        spread out; the invariant holds for any weights, so no checkpoint is needed.
+        """
+        import torch
+
+        from constrained_decode import ConstrainedDecoder
+        from cron_automaton import is_well_formed
+        from model import Config, TinyCronLM
+
+        torch.manual_seed(0)
+        model = TinyCronLM(Config(d_model=64, n_layer=2, n_head=2, d_ff=128, max_len=128))
+        texts = [
+            "every 5 minutes",
+            "at 9:15 in the morning on the first day of every month",
+            "weekdays",
+            "run this at half past six in the evening on Tuesdays and Thursdays",
+            "midnight",
+            "every third hour from 1 AM to 1 PM, Monday to Friday",
+        ]
+        one = ConstrainedDecoder(model).decode(texts, batch_size=1)
+        many = ConstrainedDecoder(model).decode(texts, batch_size=len(texts))
+        self.assertEqual(one, many)
+        for text, pred in zip(texts, many):
+            self.assertTrue(is_well_formed(pred), f"{text!r} -> {pred!r}")
 
     def test_lr_schedule_shape(self) -> None:
         from train import lr_at
