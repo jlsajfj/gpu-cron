@@ -1,12 +1,8 @@
 """Evaluate a trained checkpoint: exact match, semantic match, and validity.
 
-Exact match understates quality here. `15 17 * * 2-4` and `15 17 * * 3,2,4` are different
-strings for the same schedule, and the dataset's own distribution contains both shapes,
-so the headline number is semantic match — the next N fire times agree with the gold
-expression — with exact match reported beside it.
-
-The unconstrained baseline runs the same weights with no logit mask, which is the direct
-measurement of what the automaton is buying.
+Exact match understates quality here — `15 17 * * 2-4` and `15 17 * * 3,2,4` are the same
+schedule — so semantic match is the headline number. The unconstrained baseline runs the
+same weights with no logit mask.
 """
 
 from __future__ import annotations
@@ -99,10 +95,10 @@ def main() -> None:
     print(f"checkpoint: {args.checkpoint}  params={ckpt['params']/1e6:.2f}M  step={ckpt['step']}")
 
     decoder = ConstrainedDecoder(model, default_automaton())
-    # Same weights, no mask: the comparison isolates what the automaton buys.
     baseline = ConstrainedDecoder(model, constrain=False)
 
     results: dict = {"checkpoint": str(args.checkpoint), "params": ckpt["params"], "step": ckpt["step"], "splits": {}}
+    preds_by_split: dict[str, list[str]] = {}
 
     with CronService() as service:
         for split in args.splits.split(","):
@@ -115,6 +111,7 @@ def main() -> None:
             golds = [r["cron"] for r in rows]
             buckets = [r.get("bucket", "unknown") for r in rows]
             preds = decoder.decode(texts, batch_size=args.batch_size)
+            preds_by_split[split] = preds
             scored, semantic, exact = score(preds, golds, buckets, service, args.semantic_n)
             scored["truncated"] = decoder.stats["truncated"]
             scored["examples"] = [
@@ -131,12 +128,12 @@ def main() -> None:
         sample = read_split(Path(args.data_dir) / "test.jsonl", args.baseline_sample)
         test_rows = results["splits"].get("test")
         if sample and test_rows:
-            # Deliberately the same first-N examples the constrained run already scored, so
-            # the two columns are comparable. An earlier version compared different sample
-            # sizes and made the mask look like it hurt accuracy.
+            # Same first-N examples the constrained run scored, so the two columns are
+            # comparable; comparing different sample sizes once made the mask look harmful.
             n = min(args.baseline_sample, test_rows["n"])
             sample = sample[:n]
             golds = [r["cron"] for r in sample]
+            preds = preds_by_split["test"]
             raw = baseline.decode([r["text"] for r in sample], batch_size=args.batch_size)
             verdicts = service.validate(raw)
             parses = sum(v["parses"] for v in verdicts)
