@@ -1,18 +1,8 @@
 """Incremental automaton over the 5-field cron grammar.
 
-The constrained decoder masks every logit that is not in ``allowed()``, so a decoded
-string is a well-formed cron expression by construction: there is no repair pass and no
-regex fixup anywhere in the pipeline. ``allowed()`` is a lazily-expanded trie walk over
-the grammar's language — the alphabet is small enough that testing each candidate
-character against ``field_state`` is cheaper than materialising the trie.
-
-Field grammar (one of the five space-separated fields)::
-
-    field := term (',' term)*
-    term  := '*' ['/' step]
-           | value ['-' value] ['/' step]
-    value := DIGIT | DIGIT DIGIT
-    step  := DIGIT | DIGIT DIGIT        (>= 1, <= the field's max)
+The decoder masks every logit not in ``allowed()``, so a decoded string is well-formed
+cron by construction — there is no repair pass or regex fixup anywhere. A field is
+``term (',' term)*`` with ``term := '*' ['/' step] | value ['-' value] ['/' step]``.
 """
 
 from __future__ import annotations
@@ -54,7 +44,6 @@ class Grammar:
 
 @lru_cache(maxsize=4096)
 def _leading_ok(digit: str, lo: int, hi: int) -> bool:
-    """Could `digit` be the first character of some value in [lo, hi]?"""
     return any(str(v).startswith(digit) for v in range(lo, hi + 1))
 
 
@@ -97,11 +86,9 @@ def _expand(term: str, spec: FieldSpec) -> set[int] | None:
 def _start_ok(term: str, threshold: int | None, spec: FieldSpec) -> bool:
     """Could this (possibly still-growing) term begin above everything already covered?
 
-    List terms are required to be strictly ascending with no overlap. That is narrower
-    than cron-parser, which allows `*/2,5`, but it is what makes "no two terms share a
-    value" checkable one character at a time — and it matches how people actually write
-    cron lists. Because every term's values lie in [start, field max], a start above the
-    running maximum is sufficient for the whole term to be disjoint from what came before.
+    Lists must be strictly ascending and non-overlapping — narrower than cron-parser, which
+    allows `*/2,5`, but checkable one character at a time. A term's values all lie in
+    [start, field max], so a start above the running maximum is enough for the whole term.
     """
     if threshold is None:
         return True
@@ -121,11 +108,10 @@ def _start_ok(term: str, threshold: int | None, spec: FieldSpec) -> bool:
 
 @lru_cache(maxsize=65536)
 def _list_ok(s: str, spec: FieldSpec, *, trailing_complete: bool) -> bool:
-    """Whether `s`'s comma-separated terms are ascending and non-overlapping.
+    """Whether `s`'s comma terms are ascending and non-overlapping.
 
-    `trailing_complete` asks two different questions of the last term. As a *prefix* the
-    last term may still grow, so only its start has to be placeable; as a *field ending*
-    the term is final, so its whole expansion has to clear the running maximum.
+    `trailing_complete=False` asks only that the last term's *start* is placeable (it may
+    still grow); `True` requires its whole expansion to clear the running maximum.
     """
     parts = s.split(",")
     threshold: int | None = None
@@ -150,9 +136,8 @@ def _list_ok(s: str, spec: FieldSpec, *, trailing_complete: bool) -> bool:
 def field_completion_len(text: str, spec: FieldSpec, max_extra: int = 3) -> int:
     """Fewest characters to append to `text` to reach a complete valid field.
 
-    Searched breadth-first by extension length with an early exit, so the usual answers (0
-    or 1) cost a handful of memoised `field_state` calls and only an unreachable state pays
-    for the full sweep.
+    Breadth-first with an early exit: the usual answers (0 or 1) cost a handful of memoised
+    `field_state` calls, and only an unreachable state pays for the full sweep.
     """
     if field_state(text, spec)[1]:
         return 0
@@ -168,11 +153,7 @@ def field_completion_len(text: str, spec: FieldSpec, max_extra: int = 3) -> int:
 
 @lru_cache(maxsize=262144)
 def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
-    """Walk `s` as a partial field.
-
-    Returns ``(is_prefix, can_end)``: whether `s` could still grow into a valid field,
-    and whether `s` is already a complete valid field.
-    """
+    """Walk `s` as a partial field; returns (could still grow, is already complete)."""
     state = "TERM_START"
     lo = 0
     one = 0  # the single value held in V1 / R_HI1 / ST1
@@ -295,10 +276,6 @@ def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
 
 
 class CronAutomaton:
-    """Tracks (field index, partial field text, characters emitted) and answers what may
-    come next. `total` is carried in the state so the length cap can be enforced without
-    recomputing the prefix lengths."""
-
     def __init__(self, grammar: Grammar):
         self.grammar = grammar
         self._allowed: dict[tuple[int, str, int], frozenset[str]] = {}
@@ -307,22 +284,15 @@ class CronAutomaton:
         return (0, "", 0)
 
     def is_terminal(self, state: tuple[int, str, int]) -> bool:
-        """True once EOS has been consumed. Terminal states accept nothing further."""
         return state[0] >= len(self.grammar.fields)
 
     def completion_len(self, state: tuple[int, str]) -> int:
         """Length of the shortest completion that actually exists from `state`.
 
-        Closing the current field is usually one character — a dangling `-` or `/` takes a
-        digit — but a field left hanging on a comma is not closeable in one: the new term
-        has to be opened *and* closed, and the list rule may force two digits (`5/7,27`).
-        An earlier version assumed one character here, which made the budget gate reject
-        every move from a state that was still completable and produced an empty `allowed`.
-
-        Each remaining field then costs `*` plus the space in front of it. Gating
+        A field left hanging on a comma needs two characters, not one: the next term has to
+        open *and* close, and the list rule can force two digits (`5/7,27`). Gating
         `allowed()` on this keeps `completion_len(state) <= remaining budget` true at every
-        reachable state, so the length cap can never strand the decoder and `allowed()` is
-        never empty for a state reached through it.
+        reachable state, so the length cap can never strand the decoder.
         """
         fi, text = state
         last = len(self.grammar.fields) - 1
@@ -386,15 +356,7 @@ def default_automaton() -> CronAutomaton:
     return CronAutomaton(default_grammar())
 
 
-def parse_cron(text: str) -> list[str]:
-    parts = text.split(" ")
-    if len(parts) != 5:
-        raise ValueError(f"expected 5 fields, got {len(parts)}: {text!r}")
-    return parts
-
-
 def is_well_formed(text: str, automaton: CronAutomaton | None = None) -> bool:
-    """True iff `text` is a string the automaton can emit end to end."""
     auto = automaton or default_automaton()
     state = auto.walk(text)
     return state is not None and auto.is_complete(state)

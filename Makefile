@@ -1,5 +1,4 @@
-# Every Python entry point goes through bin/py, which sets LD_LIBRARY_PATH for the
-# manylinux torch wheel on NixOS.
+# bin/py sets LD_LIBRARY_PATH for the manylinux torch wheel on NixOS.
 
 PY := bin/py
 DATA := data/out

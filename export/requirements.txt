@@ -1,6 +1,4 @@
-# Extra packages export/export_onnx.py needs on top of the training environment
-# (torch lives in the repo venv; use bin/py):
-#   bin/py -m pip install -r export/requirements.txt
+# export/export_onnx.py; torch comes from the repo venv, so install with bin/py.
 onnx>=1.22
 onnxruntime>=1.30
 onnxscript>=0.7

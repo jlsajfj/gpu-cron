@@ -1,10 +1,5 @@
-"""Render eval/results/*.json into the README's results section.
-
-Keeps the published numbers derived from the eval output rather than transcribed by hand,
-so a re-run updates the README with `make eval` instead of a copy-paste.
-
-    bin/py eval/render_table.py eval/results/default.json eval/results/mini.json
-"""
+"""Render eval/results/*.json into the README's results section, so the published numbers
+come from the eval output instead of a copy-paste."""
 
 from __future__ import annotations
 

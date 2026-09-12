@@ -1,10 +1,3 @@
-"""Byte-level encoding and length-bucketed batching.
-
-The prompt is ``"<english> => "`` and the target is the cron string followed by EOS, so
-the model only ever has to learn the mapping, not a formatting convention that varies.
-Loss is taken on the cron bytes and EOS alone; the prompt is masked out.
-"""
-
 from __future__ import annotations
 
 import json
@@ -20,15 +13,8 @@ PROMPT_SUFFIX = " => "
 
 
 def encode_example(text: str, cron: str) -> tuple[list[int], list[int]]:
-    """Return (ids, labels) for next-token training.
-
-    `labels[i]` is the token to predict *at* position i, which is `ids[i + 1]` — the loss
-    pairs `logits[i]` with `labels[i]`, and a causal model at position i can see `ids[i]`
-    but not `ids[i + 1]`. Lining labels up with `ids[i]` instead turns this into a copy
-    task the model can solve perfectly without learning anything, which is exactly what an
-    earlier version did: near-zero training and validation loss, and total failure under
-    greedy decoding.
-    """
+    """`labels[i]` is `ids[i + 1]`: lining it up with `ids[i]` instead makes this a copy
+    task — near-zero loss and nothing decodes — rather than next-token prediction."""
     prompt = (text + PROMPT_SUFFIX).encode("utf-8")
     target = list(cron.encode("utf-8")) + [EOS]
     ids = [BOS, *prompt, *target]
@@ -75,14 +61,10 @@ def collate(batch: list[Example], pad_to: int | None = None) -> tuple[torch.Tens
 
 
 class LengthBucketedBatcher:
-    """Batches similar-length examples together so padding waste stays low on CPU, where
-    every padded position costs the same as a real one.
+    """Batches similar-length examples so padding waste stays low on CPU.
 
-    Sorting by length alone is not enough: the dataset is written expression-by-expression,
-    so the 8-40 phrasings of one cron are adjacent and near-identical in length. Contiguous
-    chunks then hand the model a batch with a single target, and the loss collapses to
-    memorisation within a few dozen steps. Shuffling inside a window large enough to mix
-    expressions keeps padding bounded while restoring a real gradient signal.
+    Sorting by length alone would batch one expression's near-identical paraphrases
+    together and collapse the loss to memorisation; the window shuffle below avoids that.
     """
 
     def __init__(self, examples: list[Example], batch_size: int, seed: int = 0, pad_multiple: int = 8):
@@ -113,6 +95,5 @@ class LengthBucketedBatcher:
                 yield collate(picked, width)
 
     def steps_per_epoch(self) -> int:
-        """Must match the number of batches `epochs()` actually yields, or a resumed run
-        skips the wrong distance into the stream."""
+        """Must match what `epochs()` yields, or a resumed run skips the wrong distance."""
         return -(-len(self.examples) // self.batch_size)

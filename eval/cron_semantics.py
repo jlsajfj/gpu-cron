@@ -1,8 +1,7 @@
-"""Thin client for data/cron-service.mjs.
+"""Thin client for data/cron-service.mjs over one long-lived subprocess.
 
-Keeps cron-parser as the single definition of what an expression means — the eval never
-reimplements fire-time enumeration, it asks the same library the dataset was validated
-with, over one long-lived subprocess.
+The eval never reimplements fire-time enumeration: cron-parser stays the single definition
+of what an expression means.
 """
 
 from __future__ import annotations

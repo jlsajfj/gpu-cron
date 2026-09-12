@@ -1,6 +1,5 @@
 // Stage 2 of the dataset: canonical English -> many surface phrasings, via an LLM.
-// Rows are batched by how many phrasings they asked for, so one prompt can state the
-// count once. Resumable: finished batches are appended to a checkpoint keyed by index.
+// Resumable: finished batches are appended to a checkpoint keyed by index.
 
 import { createWriteStream, existsSync, readFileSync } from 'node:fs';
 import { mkdir, readFile } from 'node:fs/promises';
@@ -10,11 +9,8 @@ import path from 'node:path';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = path.join(ROOT, 'data', 'out');
 
-// gpt-4.1-mini over gpt-5-mini: the reasoning model spends 2-3k hidden reasoning tokens
-// per call here (35s vs 6s) and paraphrasing needs none of it.
+// gpt-4.1-mini over gpt-5-mini: the reasoning model burns 2-3k hidden tokens per call (35s vs 6s).
 const MODEL = process.env.PARAPHRASE_MODEL ?? 'gpt-4.1-mini';
-// Rows per call shrink as the per-row count grows, so one response never has to carry
-// more than this many phrasings.
 const MAX_PHRASINGS_PER_CALL = 160;
 const BATCH = Number(process.env.PARAPHRASE_BATCH ?? 8);
 const CONCURRENCY = Number(process.env.PARAPHRASE_CONCURRENCY ?? 32);

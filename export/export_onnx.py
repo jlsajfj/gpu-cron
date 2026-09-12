@@ -1,16 +1,8 @@
 """Export a trained checkpoint to ONNX for the browser decoder.
 
-The browser only ever needs the logits at the position it is about to sample, so the graph
-is wrapped to return the last position alone (``[batch, 259]``) instead of the whole
-``[batch, seq, 259]`` cube. Sequence length stays dynamic: the decoder re-runs the growing
-prefix on every step rather than keeping a KV cache.
-
-    bin/py export/export_onnx.py --checkpoint runs/mini/checkpoint.pt --int8 \
-        --out web/weights/model.int8.onnx
-
-A trailing ``.int8`` is stripped from ``--out`` to name the float export, so pointing it at
-``model.int8.onnx`` writes ``model.onnx`` alongside it. The int8 file is what the demo
-inlines; ``web/scripts/build.mjs`` reads it via the ``WEB_MODEL`` environment variable.
+The graph returns only the last position's logits and keeps the sequence length dynamic —
+the browser re-runs the growing prefix each step rather than keeping a KV cache. A trailing
+``.int8`` in ``--out`` names the quantized file, so the float export lands beside it.
 """
 
 from __future__ import annotations
@@ -117,7 +109,6 @@ def main() -> None:
     checkpoint = Path(args.checkpoint)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    # "--out model.int8.onnx" names the quantized file, so the float export lands beside it.
     stem = out.name[: -len(".int8.onnx")] if out.name.endswith(".int8.onnx") else out.stem
     fp32 = out.parent / f"{stem}.onnx"
     int8 = out.parent / f"{stem}.int8.onnx"

@@ -1,5 +1,4 @@
-// Samples cron expressions from a weighted, hand-tuned distribution of the shapes
-// people actually write, then validates each one by enumerating fire times.
+// Weighted, hand-tuned distribution of the cron shapes people actually write.
 
 import { CronExpressionParser } from 'cron-parser';
 
@@ -24,15 +23,13 @@ const MINUTES = [0, 5, 10, 15, 20, 30, 45];
 const TIDY_MINUTES = [0, 15, 30, 45];
 const HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 
-// `m` and `h` are only used by the buckets that need a time-of-day; most buckets
-// roll their own so that "daily at HH:MM" stays denser than uniform over 24*60.
+// Most buckets roll their own time so "daily at HH:MM" stays denser than uniform over 24*60.
 function time(rng) {
   return { m: pick(rng, TIDY_MINUTES), h: pick(rng, HOURS) };
 }
 
-// Every bucket writes exactly one restricted DOM/DOW field or neither. Restricting
-// both flips cron semantics from AND to OR, which no phrasing in the dataset could
-// disambiguate; see the README's ambiguity policies.
+// At most one of DOM/DOW is restricted: restricting both flips cron from AND to OR, which
+// no phrasing in the dataset can disambiguate (see the README's ambiguity policies).
 export const BUCKETS = [
   {
     name: 'every-minute',
@@ -230,8 +227,7 @@ export function countFires(cron, { max = 1000 } = {}) {
   return n;
 }
 
-// cron-parser rejects impossible dates ("0 0 30 2 *") at parse time, and refuses to
-// enumerate an expression that never fires. Every sample goes through here.
+// cron-parser refuses to enumerate an expression that never fires ("0 0 30 2 *").
 export function isViable(cron) {
   return countFires(cron, { max: REQUIRED_FIRES }) >= REQUIRED_FIRES;
 }

@@ -1,10 +1,9 @@
 """Emit grammar/conformance.json — the contract between the Python and JS automata.
 
-The decoder exists twice on purpose (torch for training/eval, ONNX Runtime Web for the
-browser demo) and two implementations of a grammar drift. This freezes a large sample of
-the Python automaton's behaviour, and both languages assert against the same file.
-
-    bin/py grammar/generate_conformance.py
+The decoder exists twice on purpose and two implementations of a grammar drift, so this
+freezes a sample of the Python automaton's behaviour that the browser suite asserts
+against — rerun `make conformance` whenever eval/cron_automaton.py changes, or that suite
+stays green against a stale recording.
 """
 
 from __future__ import annotations
@@ -32,8 +31,7 @@ def main() -> None:
     base: list[tuple[int, str, int]] = []
     seen: set[tuple[int, str]] = set()
 
-    # Walk at random and record each state the walk passes through, so the sampled states
-    # are exactly the ones decoding actually visits rather than a uniform sweep.
+    # Random walk, so the sampled states are the ones decoding actually visits.
     while len(base) < STATE_CASES:
         state = auto.start()
         for _ in range(grammar.max_length + 2):
@@ -49,10 +47,8 @@ def main() -> None:
                 break
             state = auto.advance(state, ch)
 
-    # A uniform walk peters out around 50 characters, so recording only the totals it
-    # reaches would never test the length budget — which is exactly where the gate lives
-    # and where a wrong `completionLen` once stranding the decoder. Each state is therefore
-    # replayed at several budgets, including the tightest ones the cap allows.
+    # A uniform walk peters out around 50 characters, so each state is replayed at several
+    # budgets — including the tightest ones, where the length gate actually lives.
     states: list[dict] = []
     for fi, text, total in base:
         for budget_total in sorted({total, *(grammar.max_length - k for k in (1, 2, 3, 5))}):

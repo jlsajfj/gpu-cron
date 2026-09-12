@@ -1,18 +1,8 @@
 """GPU path: LoRA fine-tune of SmolLM2-135M instead of training from scratch.
 
-NOT the default and NOT run by anything in this repo's tested path. It exists so that a
-machine with a GPU can compare a pretrained backbone against the from-scratch model. The
-numbers in the README come from train/train.py on CPU; nothing here has been executed on
-the box (no GPU, and `transformers` is not installed), so treat this as unverified.
-
-    pip install -r requirements-gpu.txt
-    python train/finetune_smollm2.py --out runs/smollm2 --steps 3000
-
-Constrained decoding against SmolLM2 is weaker than against the byte model by
-construction: SmolLM2's tokenizer is BPE, so only tokens whose text is exactly one cron
-character can be allowed, which forces one character per token. The masking logic is the
-same (eval/cron_automaton.py), and decoding stays valid-by-construction; it is just
-slower per character.
+Unverified: never executed on the box (no GPU), and nothing in the tested path imports it.
+SmolLM2's tokenizer is BPE, so only tokens decoding to exactly one cron character can be
+allowed — decoding stays valid by construction, but one character per token is slow.
 """
 
 from __future__ import annotations
@@ -65,7 +55,6 @@ def build_examples(rows, tokenizer, max_len: int):
 
 
 def allowed_token_mask(automaton, state, tokenizer, device):
-    """Token ids whose decoded text is exactly one character the automaton allows."""
     import torch
 
     allowed = automaton.allowed(state)

@@ -1,7 +1,4 @@
 // Stage 1 of the dataset: cron expression -> canonical English, via cronstrue.
-// PAIR_TARGET is the size of the *finished* dataset (canonicals x phrasings), not the
-// number of distinct expressions; paraphrasing happens in stage 2.
-// Emits one row per *distinct* cron string; paraphrasing happens in stage 2.
 
 import { createWriteStream } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
@@ -36,10 +33,9 @@ const rng = mulberry32(SEED);
 const rows = [];
 let attempts = 0;
 
-// Quotas are on *pairs*, not expressions. Sampling N distinct expressions would let the
-// four high-cardinality buckets crowd out "every 5 minutes" and "daily at 9am" — the
-// shapes people actually write. Each bucket instead fills its own share of the pair
-// budget, spending extra phrasings on the buckets that have few distinct expressions.
+// Quotas are on *pairs* (PAIR_TARGET is the finished dataset size, not a count of distinct
+// expressions): sampling N distinct expressions lets the high-cardinality buckets crowd out
+// "every 5 minutes" and "daily at 9am". Each bucket fills its own share of the pair budget.
 const BASE_PHRASINGS = 8;
 const MAX_PHRASINGS = 40;
 const TOTAL_WEIGHT = BUCKETS.reduce((sum, b) => sum + b.weight, 0);
@@ -85,7 +81,7 @@ if (projectedPairs < TARGET * 0.5) {
   throw new Error(`only projected ${projectedPairs}/${TARGET} pairs after ${attempts} attempts`);
 }
 
-// Seeded shuffle so bucket order can't leak into a positional train/val/test split.
+// Shuffled so bucket order can't leak into the positional train/val/test split below.
 for (let i = rows.length - 1; i > 0; i -= 1) {
   const j = Math.floor(rng() * (i + 1));
   [rows[i], rows[j]] = [rows[j], rows[i]];

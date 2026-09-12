@@ -1,9 +1,7 @@
-"""A decoder-only transformer small enough to train on CPU, over a byte vocabulary.
+"""Decoder-only transformer over a byte vocabulary.
 
-The vocabulary is bytes because the input is free English text and the output alphabet is
-16 characters (``0123456789*,-/ `` plus space). Sharing one byte vocabulary across both
-sides means the constrained decoder only ever has to mask logits, never translate between
-tokenizers. Three reserved ids sit above the byte range: PAD, BOS, EOS.
+One vocabulary covers both sides, so the constrained decoder only has to mask logits and
+never translates between tokenizers.
 """
 
 from __future__ import annotations
@@ -116,8 +114,7 @@ class TinyCronLM(nn.Module):
         if cfg.tied_embeddings:
             self.head.weight = self.tok.weight
         self.apply(self._init)
-        # Scaled residual init: without it the pre-LN residual stream grows with depth and
-        # the first few hundred steps are spent recovering a sane scale.
+        # Scaled residual init, or the pre-LN residual stream grows with depth.
         for name, param in self.named_parameters():
             if name.endswith("proj.weight"):
                 nn.init.normal_(param, std=0.02 / math.sqrt(2 * cfg.n_layer))
@@ -131,14 +128,30 @@ class TinyCronLM(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, std=0.02)
 
-    def forward(self, idx: torch.Tensor, targets: torch.Tensor | None = None):
+    def forward(
+        self,
+        idx: torch.Tensor,
+        targets: torch.Tensor | None = None,
+        position_ids: torch.Tensor | None = None,
+        valid_mask: torch.Tensor | None = None,
+    ):
+        """`position_ids` and `valid_mask` exist for batched decoding of unequal-length
+        prompts. Training never has a real token following a PAD, so a padded batch that
+        lets one attend to PAD is off-distribution; masking those keys out and numbering
+        each row's real tokens from zero is what makes a batched decode equivalent to the
+        one-row-at-a-time decode the browser does."""
         b, t = idx.shape
         if t > self.cfg.max_len:
             raise ValueError(f"sequence length {t} exceeds max_len {self.cfg.max_len}")
-        positions = torch.arange(t, device=idx.device)
+        positions = position_ids if position_ids is not None else torch.arange(t, device=idx.device)
         x = self.drop(self.tok(idx) + self.pos(positions))
         causal = torch.tril(torch.ones(t, t, dtype=torch.bool, device=idx.device))
         mask = causal[None, None, :, :]
+        if valid_mask is not None:
+            mask = mask & valid_mask[:, None, None, :]
+            # A query whose every key is masked would softmax over all -inf and produce NaN,
+            # so each position is always allowed to attend to itself.
+            mask = mask | torch.eye(t, dtype=torch.bool, device=idx.device)[None, None, :, :]
         for block in self.blocks:
             x = block(x, mask)
         logits = self.head(self.norm_f(x))
@@ -148,22 +161,3 @@ class TinyCronLM(nn.Module):
             logits.view(-1, logits.size(-1)), targets.reshape(-1), ignore_index=-100
         )
         return logits, loss
-
-    @torch.no_grad()
-    def generate(self, idx: torch.Tensor, max_new: int, mask_fn=None) -> torch.Tensor:
-        """Greedy decode, optionally masking logits via `mask_fn(allowed_ids)`.
-
-        `mask_fn` is handed the set of token ids the grammar permits at this step and
-        returns a boolean mask over the vocabulary; the constrained decoder supplies it.
-        """
-        was_training = self.training
-        self.eval()
-        for _ in range(max_new):
-            ctx = idx[:, -self.cfg.max_len :]
-            logits = self(ctx)[:, -1, :]
-            if mask_fn is not None:
-                logits = logits + mask_fn(logits)
-            nxt = logits.argmax(dim=-1, keepdim=True)
-            idx = torch.cat([idx, nxt], dim=1)
-        self.train(was_training)
-        return idx

@@ -1,11 +1,5 @@
 // Cron semantics over stdin/stdout, one JSON request per line, one JSON response per line.
-// Everything that needs to know what a cron expression *means* goes through cron-parser
-// here, so the training/eval Python never grows a second, subtly different implementation.
-//
-//   {"op":"validate","crons":["*/5 * * * *", ...]}
-//   {"op":"fires","cron":"0 9 * * *","n":5,"from":"2026-01-01T00:00:00Z"}
-//   {"op":"semantic","pairs":[["0 9 * * *","0 9 * * *"],...],"n":5}
-//
+// The Python side never grows a second implementation of what an expression means.
 // All enumeration is pinned to UTC and a fixed start date so results are reproducible.
 
 import { createInterface } from 'node:readline';
@@ -51,7 +45,6 @@ const handlers = {
   },
 };
 
-// Importable as a module (eval/tests) and runnable as a line server (Python subprocess).
 export function handle(request) {
   const handler = handlers[request?.op];
   if (handler === undefined) return { error: `unknown op: ${request?.op}` };

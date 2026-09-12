@@ -1,17 +1,8 @@
 """Stage 3: turn the paraphrase checkpoint into the training/eval splits.
 
-Splits come from the canonical rows, so they hold at two levels:
-
-- ``test`` / ``val``: the cron expression *and* its canonical English were never trained
-  on. This is the headline number.
-- ``holdout``: paraphrases of schedules that *are* in training, one per training
-  expression, held back before the model ever saw the rest. This isolates "new way of
-  saying a known schedule" from "new schedule".
-
-A phrasing that maps to two different cron expressions is dropped outright rather than
-assigned an arbitrary winner — with ranges and lists in the distribution, ``0-2`` and
-``0,1,2`` are different strings for the same schedule, and a phrasing that legitimately
-fits both would otherwise teach the model to guess.
+``test``/``val`` expressions and their canonical English were never trained on; ``holdout``
+is one phrasing per training expression, held back before training. A phrasing that maps to
+two expressions is dropped rather than assigned an arbitrary winner.
 """
 
 from __future__ import annotations
@@ -32,7 +23,6 @@ def normalize(text: str) -> str:
 
 
 def load_checkpoint() -> list[dict]:
-    """Each checkpoint line is a batch; the canonical rows are nested inside it."""
     rows: list[dict] = []
     for path in sorted(OUT.glob("paraphrase.ckpt*.jsonl")):
         for line in path.read_text().splitlines():
@@ -64,10 +54,8 @@ def main() -> None:
             targets = [(split, p) for p in phrasings]
         else:
             continue
-        # The LLM is asked for *diverse* phrasings and systematically avoids the plainest
-        # reading — "every 15 minutes" never appeared for `*/15 * * * *`, so the model had
-        # never seen the most obvious way to say the most common schedule. cronstrue's
-        # canonical string is itself a valid phrasing, so it is added verbatim.
+        # The LLM never volunteers the plainest reading ("every 15 minutes" was missing for
+        # `*/15 * * * *`), so cronstrue's canonical string is added verbatim as a pair.
         targets.append((split if split in ("val", "test") else "train", row["english"]))
         canonical_echoes += 1
 

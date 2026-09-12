@@ -1,12 +1,3 @@
-"""Train the from-scratch tiny cron model.
-
-Runs to completion on the box's CPU: `--config configs/mini.json` finishes in minutes,
-`--config configs/default.json` is the overnight-on-CPU configuration, and
-`finetune_smollm2.py` is the GPU path (not the default, and not needed by anything here).
-
-    python train/train.py --config configs/default.json --data-dir data/out --out runs/default
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -41,9 +32,9 @@ def lr_at(step: int, *, peak: float, warmup: int, total: int, min_ratio: float =
 
 
 def evaluate_val(model, examples, batch_size: int = 64, max_examples: int = 2000) -> float:
-    """Mean loss on a fixed slice of the val split, with the model in eval mode.
+    """Mean loss on a fixed val slice, in eval mode.
 
-    Training loss here is measured on the batch just consumed and says nothing about
+    Training loss is measured on the batch just consumed and says nothing about
     generalisation on a task this structured; this is the number worth trusting.
     """
     import torch.nn.functional as F
@@ -140,7 +131,6 @@ def main() -> None:
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=0.1, betas=(0.9, 0.95))
 
     batcher = LengthBucketedBatcher(train_examples, batch_size, seed=args.seed)
-    # Steps are counted in optimiser updates, so an epoch is however many batches that is.
     steps_per_epoch = max(1, batcher.steps_per_epoch())
     epochs = steps / steps_per_epoch
     print(f"steps/epoch={steps_per_epoch}  epochs={epochs:.2f}", flush=True)
@@ -229,8 +219,7 @@ def main() -> None:
             print(f"time budget hit at step {step}/{steps}", flush=True)
             break
 
-    # A final full-length val pass answers "does it still improve at the end", which a
-    # fixed step budget is otherwise just guessing at.
+    # Full-length val pass at the end, so the step budget isn't the only evidence.
     for limit in (2000, 20000):
         if len(val_examples) > limit:
             continue
