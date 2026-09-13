@@ -7,6 +7,12 @@ import json
 import sys
 from pathlib import Path
 
+def size_label(params: int) -> str:
+    if params < 1_000_000:
+        return f"{params // 1000}k"
+    return f"{params / 1e6:.1f}M"
+
+
 SPLIT_LABEL = {
     "test": "test (unseen expression)",
     "holdout": "holdout (unseen phrasing, seen expression)",
@@ -26,7 +32,7 @@ def render(paths: list[Path]) -> str:
     ]
     for data, split, scored in rows:
         lines.append(
-            f"| {data['params'] / 1e6:.1f}M | {SPLIT_LABEL.get(split, split)} | {scored['n']:,} | "
+            f"| {size_label(data['params'])} | {SPLIT_LABEL.get(split, split)} | {scored['n']:,} | "
             f"**{scored['semantic_pct']:.1f}%** | {scored['exact_pct']:.1f}% | "
             f"{scored['well_formed_pct']:.1f}% | {scored['fires_pct']:.1f}% |"
         )
@@ -46,11 +52,11 @@ def render(paths: list[Path]) -> str:
         seen_models.add(id(data))
         n = base["n"]
         lines.append(
-            f"| {data['params'] / 1e6:.1f}M | constrained | {head['well_formed_pct']:.1f}% | "
+            f"| {size_label(data['params'])} | constrained | {head['well_formed_pct']:.1f}% | "
             f"{head['semantic_pct']:.1f}% | {head['exact_pct']:.1f}% |"
         )
         lines.append(
-            f"| {data['params'] / 1e6:.1f}M | unconstrained | {base['parses_pct']:.1f}% | "
+            f"| {size_label(data['params'])} | unconstrained | {base['parses_pct']:.1f}% | "
             f"{base['semantic_pct']:.1f}% | {base['exact_pct']:.1f}% |"
         )
         lines.append("")
