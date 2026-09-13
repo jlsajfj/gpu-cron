@@ -1,0 +1,12 @@
+{
+  "comment": "46k params, ~45 KB at int8. Sized so the page stays in the tens-of-KB range.",
+  "d_model": 32,
+  "n_layer": 3,
+  "n_head": 2,
+  "d_ff": 96,
+  "max_len": 192,
+  "dropout": 0.0,
+  "batch_size": 128,
+  "lr": 0.008,
+  "steps": 15000
+}

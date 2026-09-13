@@ -1,7 +1,7 @@
-import { decode, newStats } from './decode.js';
-import { nextFireTimes } from './cron.js';
-import { isWellFormed } from './automaton.js';
-import { loadRuntime, latchInferenceFailure, modelSizeLabel, paramLabel, type Runtime } from './runtime.js';
+// The demo is a consumer of the published package: it imports the same entry point an npm
+// user would and renders whatever parse() returns. Nothing here reaches into the internals.
+
+import { backend, parse, type CronMatch } from '../src/index.js';
 
 const EXAMPLES = [
   'every weekday at 9am',
@@ -30,27 +30,9 @@ const errorBody = need<HTMLElement>('error-body');
 const themeButton = need<HTMLButtonElement>('theme');
 const firedNote = need<HTMLElement>('fires-note');
 
-const stats = newStats();
-let runtime: Runtime | null = null;
 let running = false;
 let queued: string | null = null;
 let debounce: number | undefined;
-
-const FAILURE_TITLES: Record<string, string> = {
-  'no-model': 'The model is not in this build',
-  'inference-failed': 'Inference stopped',
-};
-
-function showError(reason: string, message: string): void {
-  errorTitle.textContent = FAILURE_TITLES[reason] ?? 'Something went wrong';
-  errorBody.textContent = message;
-  errorPanel.hidden = false;
-  resultPanel.hidden = true;
-}
-
-function clearError(): void {
-  errorPanel.hidden = true;
-}
 
 function badge(label: string, value: string, tone = ''): void {
   const element = document.createElement('span');
@@ -65,10 +47,16 @@ function badge(label: string, value: string, tone = ''): void {
   badges.append(element);
 }
 
-function renderFires(cron: string): void {
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function renderFires(match: CronMatch): void {
   fires.replaceChildren();
-  const next = nextFireTimes(cron, 5);
-  for (const time of next) {
+  for (const iso of match.next) {
+    const time = new Date(iso);
     const item = document.createElement('li');
     const day = document.createElement('span');
     day.className = 'fire-day';
@@ -84,54 +72,43 @@ function renderFires(cron: string): void {
     fires.append(item);
   }
   firedNote.textContent =
-    next.length === 0
-      ? 'This expression never fires.'
-      : 'Local time, computed in this tab.';
+    match.next.length === 0 ? 'This expression never fires.' : 'Local time, computed in this tab.';
 }
 
-function renderResult(cron: string, millis: string, perToken: string): void {
-  cronOut.textContent = cron;
-  renderFires(cron);
+function render(match: CronMatch, millis: number, params: number, bytes: number): void {
+  cronOut.textContent = match.expression;
+  renderFires(match);
   badges.replaceChildren();
-  badge('params', runtime ? paramLabel(runtime.params) : 'unknown', 'good');
-  badge('weights', runtime ? modelSizeLabel(runtime.modelBytes) : 'unknown');
-  badge('per token', perToken);
-  badge('total', millis);
-  // Worth saying out loud: with no runtime and no GPU requirement this runs anywhere.
-  badge('runs', 'no GPU, no wasm runtime', 'plain');
+  const info = backend();
+  badge('params', params < 1000 ? `${params}` : `${(params / 1000).toFixed(0)}k`, 'good');
+  badge('weights', formatBytes(bytes));
+  badge('backend', info?.runtime === 'webgpu' ? `webgpu · ${info.adapter || 'device'}` : 'cpu · plain TS');
+  badge('total', `${millis.toFixed(0)} ms`);
   resultPanel.hidden = false;
 }
 
-function formatMillis(ms: number): string {
-  return ms < 1 ? `${ms.toFixed(2)} ms` : `${ms.toFixed(0)} ms`;
+function showError(title: string, message: string): void {
+  errorTitle.textContent = title;
+  errorBody.textContent = message;
+  errorPanel.hidden = false;
+  resultPanel.hidden = true;
 }
 
 async function run(text: string): Promise<void> {
-  if (runtime === null) return;
   if (running) {
     queued = text;
     return;
   }
   running = true;
   try {
-    const decoded = await decode(text, runtime.logits, { stats });
-    const cron = decoded.text;
-    const perToken =
-      decoded.tokenMillis.length === 0
-        ? 'n/a'
-        : formatMillis(decoded.tokenMillis.reduce((a, b) => a + b, 0) / decoded.tokenMillis.length);
-    if (decoded.truncated || !isWellFormed(cron)) {
-      showError(
-        'inference-failed',
-        `The decoder stopped early on ${JSON.stringify(cron)}. Try rephrasing.`,
-      );
-    } else {
-      clearError();
-      renderResult(cron, formatMillis(decoded.totalMillis), perToken);
-    }
+    const started = performance.now();
+    const match = await parse(text, { count: 5 });
+    const millis = performance.now() - started;
+    const info = backend();
+    errorPanel.hidden = true;
+    render(match, millis, info?.params ?? 0, info?.bytes ?? 0);
   } catch (error) {
-    const failure = latchInferenceFailure(error);
-    showError(failure.reason, failure.message);
+    showError('No cron for that', error instanceof Error ? error.message : String(error));
   } finally {
     running = false;
     const next = queued;
@@ -186,7 +163,7 @@ function initTheme(): void {
   });
 }
 
-async function boot(): Promise<void> {
+function boot(): void {
   buildExamples();
   initTheme();
   form.addEventListener('submit', (event) => {
@@ -196,12 +173,6 @@ async function boot(): Promise<void> {
   input.addEventListener('input', () => schedule(input.value));
   input.focus();
 
-  const loaded = await loadRuntime();
-  if (!loaded.ok) {
-    showError(loaded.reason, loaded.message);
-    return;
-  }
-  runtime = loaded.runtime;
   // ?q= makes a prompt linkable, and gives the smoke test a way to drive a specific input.
   const deepLink = new URLSearchParams(location.search).get('q');
   if (deepLink !== null && deepLink.trim() !== '') input.value = deepLink;
@@ -209,4 +180,4 @@ async function boot(): Promise<void> {
   void run(input.value);
 }
 
-void boot();
+boot();

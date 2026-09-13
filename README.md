@@ -231,6 +231,49 @@ renders a visible panel rather than a blank output box.
 The demo uses the same automaton as training, ported to TypeScript and pinned to the
 Python by `grammar/conformance.json` (12,500 state cases and 600 accept/reject cases).
 
+## GPU conformance harness
+
+`test/gpu-conformance.html` pins a WebGPU forward pass to the same frozen fixture as the
+TypeScript one. It loads `test/fixtures/tiny.*`, dequantizes every int8 tensor to f32 itself
+(per-row symmetric, `q[r*cols+c] * scales[r]`) so the shader never has to know quantization
+exists, and then compares the returned logits against the numpy reference for every case in
+`tiny-reference.json`, failing on any case whose worst absolute delta reaches 1e-4.
+
+The page exposes one entry point for the pass to implement:
+
+```js
+window.runConformance(makeLogits);
+// makeLogits(bytes: Uint8Array, manifest) => (ids: number[]) => Promise<Float32Array> | Float32Array
+```
+
+`bytes` and `manifest` are the pure-f32 view: every tensor is kind `f32`, repacked
+contiguously, with the original offsets and scales gone. The pass returns logits for the last
+position over the full vocabulary. The verdict is written as JSON to both `document.title`
+and `<pre id="result">`.
+
+Run it headless:
+
+```bash
+node scripts/gpu-test.mjs          # drives the page's own window.makeLogits
+node scripts/gpu-test.mjs --stub   # echoes the reference logits back, to exercise the page alone
+```
+
+Both serve `test/` over 127.0.0.1 (WebGPU requires a secure context, so a LAN address will
+not do) and drive `$CHROMIUM_BIN` over the devtools protocol with no dependencies. Chromium
+does not hand out a WebGPU adapter under one fixed flag set across machines, so the runner
+probes instead of guessing: plain headless, then `--enable-unsafe-swiftshader`, then
+`--use-angle=swiftshader --enable-unsafe-swiftshader --enable-features=Vulkan`, then the Dawn
+opt-ins. On the box this was written on (no GPU, chromium 149) the first three all returned a
+null adapter and only `--headless=new --enable-unsafe-webgpu` produced one, reporting
+`google swiftshader`. It picks the first set that yields an adapter and prints which one it
+used.
+
+**A machine with no WebGPU at all is skipped, not failed.** When no flag set yields an
+adapter the runner prints a `SKIP:` line naming how many sets it tried and exits 0, so a CI
+box without a GPU cannot fail the suite red. Any other failure, whether a delta over
+tolerance, a shader error or a timeout (60s, or `--timeout=ms`), exits non-zero with the
+reason.
+
 ## Limitations
 
 **Quality is what it is.** The numbers are in the table above; the model is a ~25M

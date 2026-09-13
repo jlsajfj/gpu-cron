@@ -1,4 +1,4 @@
-import raw from '../../grammar/cron-grammar.json';
+import raw from '../grammar/cron-grammar.json';
 
 export interface FieldSpec {
   readonly name: string;

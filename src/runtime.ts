@@ -1,20 +1,20 @@
-// Loads the inlined weights and exposes a logits function.
-//
-// There is no inference runtime here on purpose. ONNX Runtime Web is ~26 MB of wasm for a
-// model of a few hundred thousand parameters, which is a download cost bigger than the
-// thing it runs; web/src/forward.ts does the arithmetic on typed arrays instead, so the
-// page needs no GPU and no wasm — it works the same everywhere.
+// Picks a backend and hands back a logits function. The weights are inlined at build time,
+// so there is nothing to fetch and no inference runtime to download — WebGPU runs the show
+// when it exists and the plain-TypeScript forward pass covers everything else.
 
-import type { LogitsFn } from './decode.js';
-import { loadModel, makeLogitsFn, type ModelManifest } from './forward.js';
+import { loadModel, makeLogitsFn } from './forward.js';
+import { loadGpuModel } from './gpu.js';
+import { MANIFEST, MODEL_BASE64, MODEL_BYTES, MODEL_NAME, MODEL_PRESENT } from './weights.generated.js';
 
 export type FailureReason = 'no-model' | 'inference-failed';
 
 export interface Runtime {
+  backend: 'webgpu' | 'cpu';
+  adapter: string | null;
   modelBytes: number;
   modelName: string;
   params: number;
-  logits: LogitsFn;
+  logits: ReturnType<typeof makeLogitsFn>;
 }
 
 export interface RuntimeFailure {
@@ -24,37 +24,11 @@ export interface RuntimeFailure {
 
 export type RuntimeResult = { ok: true; runtime: Runtime } | ({ ok: false } & RuntimeFailure);
 
-interface WeightsModule {
-  MODEL_BASE64: string;
-  MANIFEST: ModelManifest;
-  MODEL_BYTES: number;
-  MODEL_PRESENT: boolean;
-  MODEL_NAME: string;
-}
-
-const WEIGHTS_URL = 'weights.generated.js';
-
 let latched: RuntimeFailure | null = null;
 
 function latch(failure: RuntimeFailure): RuntimeFailure {
   latched ??= failure;
   return latched;
-}
-
-function base64ToBytes(base64: string): Uint8Array {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-async function loadWeights(): Promise<WeightsModule | null> {
-  try {
-    const url = new URL(WEIGHTS_URL, import.meta.url).href;
-    return (await import(url)) as WeightsModule;
-  } catch {
-    return null;
-  }
 }
 
 export function modelSizeLabel(bytes: number): string {
@@ -67,35 +41,44 @@ export function paramLabel(params: number): string {
   return params < 1000 ? `${params}` : `${(params / 1000).toFixed(0)}k`;
 }
 
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 export async function loadRuntime(): Promise<RuntimeResult> {
   if (latched !== null) return { ok: false, ...latched };
 
-  const weights = await loadWeights();
-  if (weights === null || !weights.MODEL_PRESENT || weights.MODEL_BASE64.length === 0) {
-    const where = weights === null ? WEIGHTS_URL : weights.MODEL_NAME;
+  if (!MODEL_PRESENT || MODEL_BASE64.length === 0) {
     return {
       ok: false,
       ...latch({
         reason: 'no-model',
-        message: `No model at ${where}. Export one with export/export_js.py and rebuild.`,
+        message: `No model at ${MODEL_NAME}. Export one with export/export_js.py and rebuild.`,
       }),
     };
   }
 
   try {
-    const bytes = base64ToBytes(weights.MODEL_BASE64);
-    const model = loadModel(bytes, weights.MANIFEST);
-    const params = weights.MANIFEST.tensors.reduce(
+    const bytes = base64ToBytes(MODEL_BASE64);
+    const params = MANIFEST.tensors.reduce(
       (sum, entry) => sum + entry.shape.reduce((a, b) => a * b, 1),
       0,
     );
+
+    const gpu = await loadGpuModel(bytes, MANIFEST);
+    const logits = gpu?.logits ?? makeLogitsFn(loadModel(bytes, MANIFEST));
     return {
       ok: true,
       runtime: {
-        modelBytes: weights.MODEL_BYTES,
-        modelName: weights.MODEL_NAME,
+        backend: gpu === null ? 'cpu' : 'webgpu',
+        adapter: gpu?.adapter ?? null,
+        modelBytes: MODEL_BYTES,
+        modelName: MODEL_NAME,
         params,
-        logits: makeLogitsFn(model),
+        logits,
       },
     };
   } catch (error) {

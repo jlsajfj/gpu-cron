@@ -1,24 +1,48 @@
 {
   "name": "nl-cron",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Natural language to cron, decoded through a cron-grammar automaton so the output is valid by construction",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate": "node scripts/build.mjs --weights-only",
+    "pretypecheck": "npm run generate",
+    "pretest": "npm run generate",
+    "build": "node scripts/build.mjs --minify",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:gpu": "node scripts/gpu-test.mjs",
+    "test:demo": "node scripts/demo-test.mjs"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jlsajfj/nl-cron.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/jlsajfj/nl-cron/issues"
-  },
-  "homepage": "https://github.com/jlsajfj/nl-cron#readme",
-  "dependencies": {
+  "keywords": [
+    "cron",
+    "crontab",
+    "schedule",
+    "webgpu",
+    "wgsl",
+    "transformers",
+    "on-device"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@webgpu/types": "^0.1.72",
     "cron-parser": "^5.10.0",
-    "cronstrue": "^3.26.0"
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }
