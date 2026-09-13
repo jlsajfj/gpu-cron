@@ -3,7 +3,7 @@
 // scripts/build.mjs, because the page itself runs no bundler.
 
 import { loadGpuModel } from '../src/gpu.js';
-import type { ModelManifest } from '../src/forward.js';
+import type { ModelManifest } from '../src/weights.js';
 
 declare global {
   interface Window {
@@ -15,9 +15,6 @@ declare global {
 }
 
 window.makeLogits = (bytes: Uint8Array, manifest: ModelManifest) => {
-  const ready = loadGpuModel(bytes, manifest).then((handle) => {
-    if (handle === null) throw new Error('no WebGPU adapter');
-    return handle;
-  });
+  const ready = loadGpuModel(bytes, manifest);
   return (ids: number[]) => ready.then((handle) => handle.logits(ids, 0));
 };

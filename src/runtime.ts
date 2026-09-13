@@ -1,20 +1,19 @@
-// Picks a backend and hands back a logits function. The weights are inlined at build time,
-// so there is nothing to fetch and no inference runtime to download — WebGPU runs the show
-// when it exists and the plain-TypeScript forward pass covers everything else.
+// Loads the inlined weights onto the GPU and hands back a logits function.
+//
+// There is no second backend. A browser without WebGPU gets a clear error rather than a
+// different, slower answer, and there is no inference runtime to download either way.
 
-import { loadModel, makeLogitsFn } from './forward.js';
-import { loadGpuModel } from './gpu.js';
+import { loadGpuModel, NoWebGpuError } from './gpu.js';
 import { MANIFEST, MODEL_BASE64, MODEL_BYTES, MODEL_NAME, MODEL_PRESENT } from './weights.generated.js';
 
-export type FailureReason = 'no-model' | 'inference-failed';
+export type FailureReason = 'no-model' | 'no-webgpu' | 'inference-failed';
 
 export interface Runtime {
-  backend: 'webgpu' | 'cpu';
-  adapter: string | null;
+  adapter: string;
   modelBytes: number;
   modelName: string;
   params: number;
-  logits: ReturnType<typeof makeLogitsFn>;
+  logits: (ids: number[], position: number) => Promise<Float32Array>;
 }
 
 export interface RuntimeFailure {
@@ -69,19 +68,20 @@ export async function loadRuntime(): Promise<RuntimeResult> {
     );
 
     const gpu = await loadGpuModel(bytes, MANIFEST);
-    const logits = gpu?.logits ?? makeLogitsFn(loadModel(bytes, MANIFEST));
     return {
       ok: true,
       runtime: {
-        backend: gpu === null ? 'cpu' : 'webgpu',
-        adapter: gpu?.adapter ?? null,
+        adapter: gpu.adapter,
         modelBytes: MODEL_BYTES,
         modelName: MODEL_NAME,
         params,
-        logits,
+        logits: gpu.logits,
       },
     };
   } catch (error) {
+    if (error instanceof NoWebGpuError) {
+      return { ok: false, ...latch({ reason: 'no-webgpu', message: error.message }) };
+    }
     return {
       ok: false,
       ...latch({

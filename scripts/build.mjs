@@ -44,7 +44,7 @@ async function writeWeights() {
   const name = path.basename(binPath);
   if (!existsSync(binPath) || !existsSync(manifestPath)) {
     const placeholder = [
-      `import type { ModelManifest } from './forward.js';`,
+      `import type { ModelManifest } from './weights.js';`,
       `export const MODEL_BASE64 = '';`,
       `export const MODEL_BYTES = 0;`,
       `export const MODEL_PRESENT = false;`,
@@ -59,7 +59,7 @@ async function writeWeights() {
   const buffer = await readFile(binPath);
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const source = [
-    `import type { ModelManifest } from './forward.js';`,
+    `import type { ModelManifest } from './weights.js';`,
     `export const MODEL_BASE64 = ${JSON.stringify(buffer.toString('base64'))};`,
     `export const MODEL_BYTES = ${buffer.length};`,
     `export const MODEL_PRESENT = true;`,

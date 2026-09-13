@@ -1,7 +1,7 @@
 // The demo is a consumer of the published package: it imports the same entry point an npm
 // user would and renders whatever parse() returns. Nothing here reaches into the internals.
 
-import { backend, parse, type CronMatch } from '../src/index.js';
+import { CronError, backend, parse, type CronMatch } from '../src/index.js';
 
 const EXAMPLES = [
   'every weekday at 9am',
@@ -82,7 +82,7 @@ function render(match: CronMatch, millis: number, params: number, bytes: number)
   const info = backend();
   badge('params', params < 1000 ? `${params}` : `${(params / 1000).toFixed(0)}k`, 'good');
   badge('weights', formatBytes(bytes));
-  badge('backend', info?.runtime === 'webgpu' ? `webgpu · ${info.adapter || 'device'}` : 'cpu · plain TS');
+  badge('backend', `webgpu · ${info?.adapter || 'device'}`);
   badge('total', `${millis.toFixed(0)} ms`);
   resultPanel.hidden = false;
 }
@@ -108,7 +108,11 @@ async function run(text: string): Promise<void> {
     errorPanel.hidden = true;
     render(match, millis, info?.params ?? 0, info?.bytes ?? 0);
   } catch (error) {
-    showError('No cron for that', error instanceof Error ? error.message : String(error));
+    const needsWebGpu = error instanceof CronError && /WebGPU/.test(error.message);
+    showError(
+      needsWebGpu ? 'This browser has no WebGPU' : 'No cron for that',
+      error instanceof Error ? error.message : String(error),
+    );
   } finally {
     running = false;
     const next = queued;

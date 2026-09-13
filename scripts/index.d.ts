@@ -14,8 +14,7 @@ export interface ParseOptions {
 }
 
 export interface Backend {
-  runtime: 'webgpu' | 'cpu';
-  adapter: string | null;
+  adapter: string;
   params: number;
   bytes: number;
 }

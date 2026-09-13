@@ -146,6 +146,15 @@ async function run() {
     await cdp.send('Page.navigate', { url });
     await sleep(3000);
 
+    // A browser without WebGPU cannot run this library at all, which is a skip, not a failure.
+    const adapter = await cdp.evaluate(
+      "(async () => (navigator.gpu ? !!(await navigator.gpu.requestAdapter()) : false))()",
+    );
+    if (adapter !== true) {
+      console.log('SKIP: no WebGPU adapter in headless chromium; the demo requires one');
+      return 0;
+    }
+
     const results = [];
     for (const testCase of CASES) {
       const outcome = await cdp.evaluate(`(async () => {
@@ -187,7 +196,9 @@ async function run() {
 
     // read the badge a visitor sees rather than a test-only hook on the page
     const backend = await cdp.evaluate(
-      "document.body.innerText.match(/webgpu · [^\n]*|cpu · plain TS/)?.[0]?.trim() ?? 'unknown'",
+      `[...document.querySelectorAll('.badge')]
+        .map((b) => b.innerText.replace(/\\s+/g, ' ').trim())
+        .find((t) => t.startsWith('backend')) ?? 'unknown'`,
     );
     console.log(`  backend: ${backend}`);
     console.log(failed === 0 ? 'PASS' : `FAIL (${failed}/${results.length})`);

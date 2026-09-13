@@ -1,15 +1,17 @@
 // The same forward pass as forward.ts, as WGSL compute shaders on WebGPU.
 //
 // Ten small shaders rather than one big kernel: each dispatch is a few microseconds of work,
-// so the win over forward.ts is that the arithmetic leaves the JS thread, not that the
-// shaders are clever. Model dims are baked into the source at load — they are fixed for a
-// given checkpoint — so the only per-token uniform is the sequence length.
+// and the arithmetic is off the JS thread entirely. Model dims are baked into the source at
+// load — they are fixed for a given checkpoint — so the only per-token uniform is the
+// sequence length.
+//
+// There is no CPU path: no adapter is an error, not a slower answer.
 //
 // The grammar mask stays on the CPU. One readback per token (vocab floats) is the price of
 // constrained decoding, and reimplementing the automaton in WGSL would not pay for itself.
 
 import type { LogitsFn } from './decode.js';
-import { loadModel, type Model, type ModelManifest } from './forward.js';
+import { loadModel, type Model, type ModelManifest } from './weights.js';
 
 const WG = 64;
 const EPS = 1e-6;
@@ -195,18 +197,18 @@ function storageModes(code: string, arity: number): Mode[] {
   return modes;
 }
 
-export async function gpuAdapterName(): Promise<string | null> {
-  if (typeof navigator === 'undefined' || navigator.gpu === undefined) return null;
-  const adapter = await navigator.gpu.requestAdapter();
-  if (adapter === null) return null;
-  const info = (adapter as unknown as { info?: { description?: string; vendor?: string } }).info;
-  return info?.description ?? info?.vendor ?? 'webgpu';
+export class NoWebGpuError extends Error {
+  override name = 'NoWebGpuError';
 }
 
-export async function loadGpuModel(bytes: Uint8Array, manifest: ModelManifest): Promise<GpuHandle | null> {
-  if (typeof navigator === 'undefined' || navigator.gpu === undefined) return null;
+export async function loadGpuModel(bytes: Uint8Array, manifest: ModelManifest): Promise<GpuHandle> {
+  if (typeof navigator === 'undefined' || navigator.gpu === undefined) {
+    throw new NoWebGpuError('This browser has no WebGPU (navigator.gpu is undefined).');
+  }
   const adapter = await navigator.gpu.requestAdapter();
-  if (adapter === null) return null;
+  if (adapter === null) {
+    throw new NoWebGpuError('No WebGPU adapter is available on this device.');
+  }
   const device = await adapter.requestDevice();
   const info = (adapter as unknown as { info?: { description?: string } }).info;
 

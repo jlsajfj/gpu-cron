@@ -24,8 +24,7 @@ export class CronError extends Error {
 }
 
 export interface Backend {
-  runtime: 'webgpu' | 'cpu';
-  adapter: string | null;
+  adapter: string;
   params: number;
   bytes: number;
 }
@@ -45,7 +44,6 @@ export async function parse(text: string, options: ParseOptions = {}): Promise<C
   if (!runtime.ok) throw new CronError(runtime.message);
 
   resolved = {
-    runtime: runtime.runtime.backend,
     adapter: runtime.runtime.adapter,
     params: runtime.runtime.params,
     bytes: runtime.runtime.modelBytes,

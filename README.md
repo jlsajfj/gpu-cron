@@ -212,21 +212,31 @@ does not put on the default search path. `bin/py` is a two-line wrapper that set
 
 ## The browser demo
 
-The demo is a single page. Type an English phrase, the model emits cron on WebGPU, and the
-page renders the next five fire times computed in the browser. Badges show which execution
-provider actually won (WebGPU or WebAssembly), the inlined model size, and per-token and
-total latency.
+`nl-cron` is an npm package with one entry point:
 
-**Weights are inlined into the bundle.** `web/scripts/build.mjs` base64-encodes the
-quantized ONNX file into a generated module, so the page has no fetch of its own for the
-model and works from `file://`-ish static hosting. The reference implementation this shape
-is copied from inlines ~27KB of a hand-written lexer; a transformer does not compress like
-that — see "Limitations".
+```js
+import { parse } from 'nl-cron';
+await parse('every weekday at 9am');   // { expression: '0 9 * * 1-5', next: [...] }
+```
 
-**Failure states are latched and classified**, not retried forever: `no-onnx` when the
-weights are missing or unloadable, `no-webgpu` when there is no adapter and the wasm
-fallback also failed, `inference-failed` when session creation or a run throws. Each
-renders a visible panel rather than a blank output box.
+There is no inference runtime to download. `scripts/build.mjs` inlines the weights into
+`dist/index.js` and the forward pass is ten WGSL compute shaders (`src/gpu.ts`), so the
+whole package is one file and the only thing the page fetches is the page.
+
+**WebGPU only.** There is no CPU fallback and none is planned: a browser without an adapter
+gets `NoWebGpuError` rather than a second, slower implementation that can disagree with the
+first. The arithmetic is the deliverable, so there is exactly one copy of it.
+
+**The grammar mask stays on the CPU.** One readback per token (259 floats) is the price of
+constrained decoding; reimplementing the automaton in WGSL would not pay for itself.
+
+**Failure states are latched and classified**, not retried forever: `no-model` when the build
+has no weights, `no-webgpu` when the device has no adapter, `inference-failed` when the
+pipeline will not load or a run throws. Each renders a visible panel rather than a blank
+output box.
+
+The demo in `demo/` imports the package the way an npm user would — same entry point, no
+reaching into internals — so it cannot drift from the published API.
 
 The demo uses the same automaton as training, ported to TypeScript and pinned to the
 Python by `grammar/conformance.json` (12,500 state cases and 600 accept/reject cases).
