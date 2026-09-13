@@ -1,0 +1,452 @@
+{
+  "checkpoint": "runs/pico/checkpoint.pt",
+  "params": 45376,
+  "step": 14999,
+  "splits": {
+    "test": {
+      "n": 7608,
+      "well_formed_pct": 100.0,
+      "parses_pct": 100.0,
+      "fires_pct": 100.0,
+      "exact_pct": 86.96,
+      "semantic_pct": 89.51,
+      "by_bucket": {
+        "hour-range-step": {
+          "n": 1012,
+          "semantic_pct": 67.59,
+          "exact_pct": 56.42
+        },
+        "dow-range": {
+          "n": 850,
+          "semantic_pct": 95.18,
+          "exact_pct": 93.53
+        },
+        "weekly-on-day": {
+          "n": 651,
+          "semantic_pct": 97.85,
+          "exact_pct": 97.7
+        },
+        "month-range": {
+          "n": 620,
+          "semantic_pct": 89.35,
+          "exact_pct": 89.03
+        },
+        "month-list": {
+          "n": 545,
+          "semantic_pct": 95.23,
+          "exact_pct": 95.23
+        },
+        "monthly-on-day": {
+          "n": 536,
+          "semantic_pct": 94.4,
+          "exact_pct": 94.4
+        },
+        "yearly": {
+          "n": 505,
+          "semantic_pct": 98.22,
+          "exact_pct": 98.22
+        },
+        "monthly-on-dom-range": {
+          "n": 469,
+          "semantic_pct": 91.68,
+          "exact_pct": 89.34
+        },
+        "hour-range": {
+          "n": 419,
+          "semantic_pct": 89.02,
+          "exact_pct": 80.67
+        },
+        "monthly-on-dom-list": {
+          "n": 380,
+          "semantic_pct": 97.37,
+          "exact_pct": 97.37
+        },
+        "every-n-days": {
+          "n": 306,
+          "semantic_pct": 84.31,
+          "exact_pct": 84.31
+        },
+        "dow-list": {
+          "n": 295,
+          "semantic_pct": 98.98,
+          "exact_pct": 93.9
+        },
+        "dow-step": {
+          "n": 290,
+          "semantic_pct": 91.38,
+          "exact_pct": 91.38
+        },
+        "minute-list": {
+          "n": 225,
+          "semantic_pct": 79.56,
+          "exact_pct": 79.11
+        },
+        "weekend-at": {
+          "n": 144,
+          "semantic_pct": 99.31,
+          "exact_pct": 99.31
+        },
+        "daily-at": {
+          "n": 141,
+          "semantic_pct": 97.87,
+          "exact_pct": 97.87
+        },
+        "weekdays-at": {
+          "n": 106,
+          "semantic_pct": 95.28,
+          "exact_pct": 93.4
+        },
+        "hour-list": {
+          "n": 75,
+          "semantic_pct": 30.67,
+          "exact_pct": 30.67
+        },
+        "offset-n-minutes": {
+          "n": 39,
+          "semantic_pct": 84.62,
+          "exact_pct": 84.62
+        }
+      },
+      "truncated": 0,
+      "examples": [
+        {
+          "text": "6:15 AM on December 1st",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "06:15 on the first of December",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "At 6:15 AM on the 1st day of December",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "December 1 at 06:15",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Run at 6:15 AM only on December's 1st",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Every December 1 at 6:15 AM",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Start at 06:15 on Dec 1",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Reminder: 6:15 AM on December 1",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "At 06:15 AM, on day 1 of the month, only in December",
+          "gold": "15 6 1 12 *",
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Midnight Monday through Thursday",
+          "gold": "0 0 * * 1-4",
+          "pred": "0 0 * * 1-4",
+          "semantic": true,
+          "exact": true,
+          "bucket": "dow-range"
+        },
+        {
+          "text": "At midnight on Monday through Thursday",
+          "gold": "0 0 * * 1-4",
+          "pred": "0 0 * * 1-4",
+          "semantic": true,
+          "exact": true,
+          "bucket": "dow-range"
+        },
+        {
+          "text": "Run at midnight, Monday to Thursday",
+          "gold": "0 0 * * 1-4",
+          "pred": "0 0 * * 1-4",
+          "semantic": true,
+          "exact": true,
+          "bucket": "dow-range"
+        }
+      ]
+    },
+    "holdout": {
+      "n": 9792,
+      "well_formed_pct": 100.0,
+      "parses_pct": 100.0,
+      "fires_pct": 100.0,
+      "exact_pct": 85.53,
+      "semantic_pct": 88.47,
+      "by_bucket": {
+        "hour-range-step": {
+          "n": 1358,
+          "semantic_pct": 70.99,
+          "exact_pct": 63.84
+        },
+        "dow-range": {
+          "n": 1162,
+          "semantic_pct": 91.39,
+          "exact_pct": 89.85
+        },
+        "monthly-on-day": {
+          "n": 878,
+          "semantic_pct": 94.87,
+          "exact_pct": 94.87
+        },
+        "hour-range": {
+          "n": 858,
+          "semantic_pct": 86.48,
+          "exact_pct": 79.02
+        },
+        "monthly-on-dom-range": {
+          "n": 704,
+          "semantic_pct": 91.48,
+          "exact_pct": 89.91
+        },
+        "month-list": {
+          "n": 695,
+          "semantic_pct": 92.95,
+          "exact_pct": 92.95
+        },
+        "yearly": {
+          "n": 692,
+          "semantic_pct": 94.8,
+          "exact_pct": 94.65
+        },
+        "month-range": {
+          "n": 684,
+          "semantic_pct": 89.33,
+          "exact_pct": 87.72
+        },
+        "every-n-days": {
+          "n": 620,
+          "semantic_pct": 73.39,
+          "exact_pct": 73.39
+        },
+        "weekly-on-day": {
+          "n": 619,
+          "semantic_pct": 98.06,
+          "exact_pct": 98.06
+        },
+        "dow-list": {
+          "n": 529,
+          "semantic_pct": 96.98,
+          "exact_pct": 81.1
+        },
+        "monthly-on-dom-list": {
+          "n": 357,
+          "semantic_pct": 97.2,
+          "exact_pct": 97.2
+        },
+        "dow-step": {
+          "n": 177,
+          "semantic_pct": 93.79,
+          "exact_pct": 93.79
+        },
+        "daily-at": {
+          "n": 91,
+          "semantic_pct": 94.51,
+          "exact_pct": 94.51
+        },
+        "weekdays-at": {
+          "n": 91,
+          "semantic_pct": 98.9,
+          "exact_pct": 98.9
+        },
+        "weekend-at": {
+          "n": 88,
+          "semantic_pct": 97.73,
+          "exact_pct": 97.73
+        },
+        "minute-list": {
+          "n": 85,
+          "semantic_pct": 78.82,
+          "exact_pct": 78.82
+        },
+        "every-n-hours": {
+          "n": 42,
+          "semantic_pct": 88.1,
+          "exact_pct": 85.71
+        },
+        "offset-n-minutes": {
+          "n": 29,
+          "semantic_pct": 86.21,
+          "exact_pct": 86.21
+        },
+        "hour-list": {
+          "n": 22,
+          "semantic_pct": 77.27,
+          "exact_pct": 77.27
+        },
+        "every-n-minutes": {
+          "n": 6,
+          "semantic_pct": 83.33,
+          "exact_pct": 83.33
+        },
+        "business-hours": {
+          "n": 3,
+          "semantic_pct": 100.0,
+          "exact_pct": 66.67
+        },
+        "every-minute": {
+          "n": 1,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "every-hour": {
+          "n": 1,
+          "semantic_pct": 100.0,
+          "exact_pct": 100.0
+        }
+      },
+      "truncated": 0,
+      "examples": [
+        {
+          "text": "Run at 6:00 am on the fifteenth calendar day between January and July",
+          "gold": "0 6 15 1-7 *",
+          "pred": "0 6 15 1,7 *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "month-range"
+        },
+        {
+          "text": "At 8:30 am starting day 3 until day 27 of the month",
+          "gold": "30 8 3-27 * *",
+          "pred": "30 8 3-27 * *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "monthly-on-dom-range"
+        },
+        {
+          "text": "Run this at 7:45 pm from day 2 up to day 6 each month",
+          "gold": "45 19 2-6 * *",
+          "pred": "45 19 2-6 * *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "monthly-on-dom-range"
+        },
+        {
+          "text": "Begin at 01:30 on the days Tuesday up to Saturday",
+          "gold": "30 1 * * 2-6",
+          "pred": "30 1 * * 2-6",
+          "semantic": true,
+          "exact": true,
+          "bucket": "dow-range"
+        },
+        {
+          "text": "9 pm the first day each January",
+          "gold": "0 21 1 1 *",
+          "pred": "0 21 1 1 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Only on November 1st at 10:15 pm",
+          "gold": "15 22 1 11 *",
+          "pred": "15 22 1 11 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "yearly"
+        },
+        {
+          "text": "Set for 6:00 am Sunday to Tuesday",
+          "gold": "0 6 * * 0-2",
+          "pred": "0 6 * * 0-2",
+          "semantic": true,
+          "exact": true,
+          "bucket": "dow-range"
+        },
+        {
+          "text": "One forty-five in the afternoon between days 3 and 12",
+          "gold": "45 13 3-12 * *",
+          "pred": "45 13 3-12 * *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "monthly-on-dom-range"
+        },
+        {
+          "text": "Happens 01:45 on Wed and Thu",
+          "gold": "45 1 * * 3-4",
+          "pred": "45 1 * * 3-4",
+          "semantic": true,
+          "exact": true,
+          "bucket": "dow-range"
+        },
+        {
+          "text": "3 AM, 6 AM, and 9 AM exactly",
+          "gold": "0 3-9/3 * * *",
+          "pred": "0 3-9/3 * * *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "hour-range-step"
+        },
+        {
+          "text": "November and December 28 at 18:30 hours",
+          "gold": "30 18 28 11,12 *",
+          "pred": "30 18 28 11,12 *",
+          "semantic": true,
+          "exact": true,
+          "bucket": "month-list"
+        },
+        {
+          "text": "At every third hour from 1 AM to 1 PM, Monday to Friday",
+          "gold": "0 1-13/3 * * 1-5",
+          "pred": "0 1-13/3 * * 1-5",
+          "semantic": true,
+          "exact": true,
+          "bucket": "hour-range-step"
+        }
+      ]
+    }
+  },
+  "unconstrained_baseline": {
+    "n": 1000,
+    "parses_pct": 99.5,
+    "exact_pct": 82.7,
+    "semantic_pct": 88.0
+  },
+  "constrained_on_baseline_sample": {
+    "n": 1000,
+    "well_formed_pct": 100.0,
+    "exact_pct": 82.7,
+    "semantic_pct": 88.0
+  }
+}

@@ -1,0 +1,33 @@
+checkpoint: runs/femto/checkpoint.pt  params=0.09M  step=11999
+  test     n=  7608  well_formed=100.00%  fires=100.00%  exact= 88.24%  semantic= 90.75%
+  holdout  n=  9792  well_formed=100.00%  fires=100.00%  exact= 88.34%  semantic= 91.04%
+  same 1000 examples: masked well_formed=100.0% exact=79.4% semantic=86.5%  |  unmasked parses=99.3% exact=79.3% semantic=86.4%
+wrote eval/results/femto.json
+
+test examples:
+  ok  6:15 AM on December 1st                                    -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  06:15 on the first of December                             -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  At 6:15 AM on the 1st day of December                      -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  December 1 at 06:15                                        -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  Run at 6:15 AM only on December's 1st                      -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  Every December 1 at 6:15 AM                                -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  Start at 06:15 on Dec 1                                    -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  Reminder: 6:15 AM on December 1                            -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  At 06:15 AM, on day 1 of the month, only in December       -> 15 6 1 12 *            (gold 15 6 1 12 *)
+  ok  Midnight Monday through Thursday                           -> 0 0 * * 1-4            (gold 0 0 * * 1-4)
+  ok  At midnight on Monday through Thursday                     -> 0 0 * * 1-4            (gold 0 0 * * 1-4)
+  ok  Run at midnight, Monday to Thursday                        -> 0 0 * * 1-4            (gold 0 0 * * 1-4)
+
+holdout examples:
+  BAD Run at 6:00 am on the fifteenth calendar day between Janua -> 0 6 15 1,7 *           (gold 0 6 15 1-7 *)
+  ok  At 8:30 am starting day 3 until day 27 of the month        -> 30 8 3-27 * *          (gold 30 8 3-27 * *)
+  ok  Run this at 7:45 pm from day 2 up to day 6 each month      -> 45 19 2-6 * *          (gold 45 19 2-6 * *)
+  ok  Begin at 01:30 on the days Tuesday up to Saturday          -> 30 1 * * 2-6           (gold 30 1 * * 2-6)
+  ok  9 pm the first day each January                            -> 0 21 1 1 *             (gold 0 21 1 1 *)
+  ok  Only on November 1st at 10:15 pm                           -> 15 22 1 11 *           (gold 15 22 1 11 *)
+  ok  Set for 6:00 am Sunday to Tuesday                          -> 0 6 * * 0-2            (gold 0 6 * * 0-2)
+  ok  One forty-five in the afternoon between days 3 and 12      -> 45 13 3-12 * *         (gold 45 13 3-12 * *)
+  ok  Happens 01:45 on Wed and Thu                               -> 45 1 * * 3-4           (gold 45 1 * * 3-4)
+  ok  3 AM, 6 AM, and 9 AM exactly                               -> 0 3-9/3 * * *          (gold 0 3-9/3 * * *)
+  ok  November and December 28 at 18:30 hours                    -> 30 18 28 11,12 *       (gold 30 18 28 11,12 *)
+  ok  At every third hour from 1 AM to 1 PM, Monday to Friday    -> 0 1-13/3 * * 1-5       (gold 0 1-13/3 * * 1-5)

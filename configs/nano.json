@@ -1,5 +1,5 @@
 {
-  "comment": "Smallest serious candidate: 229k params, d=64 L=4. Same recipe as mini so the only variable is size.",
+  "comment": "226k params. Retrained to the matched recipe (dropout 0) so the curve points are comparable.",
   "d_model": 64,
   "n_layer": 4,
   "n_head": 4,
@@ -8,5 +8,5 @@
   "dropout": 0.0,
   "batch_size": 128,
   "lr": 0.006,
-  "steps": 8000
+  "steps": 10000
 }
