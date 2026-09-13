@@ -10,9 +10,6 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "dependencies": {
-    "onnxruntime-web": "^1.23.0"
-  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "cron-parser": "^5.10.0",

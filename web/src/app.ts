@@ -1,7 +1,7 @@
 import { decode, newStats } from './decode.js';
 import { nextFireTimes } from './cron.js';
 import { isWellFormed } from './automaton.js';
-import { loadRuntime, latchInferenceFailure, modelSizeLabel, type Runtime } from './runtime.js';
+import { loadRuntime, latchInferenceFailure, modelSizeLabel, paramLabel, type Runtime } from './runtime.js';
 
 const EXAMPLES = [
   'every weekday at 9am',
@@ -37,8 +37,7 @@ let queued: string | null = null;
 let debounce: number | undefined;
 
 const FAILURE_TITLES: Record<string, string> = {
-  'no-webgpu': 'WebGPU is not available here',
-  'no-onnx': 'The model is not in this build',
+  'no-model': 'The model is not in this build',
   'inference-failed': 'Inference stopped',
 };
 
@@ -94,13 +93,12 @@ function renderResult(cron: string, millis: string, perToken: string): void {
   cronOut.textContent = cron;
   renderFires(cron);
   badges.replaceChildren();
-  badge('runs on', runtime?.provider ?? 'model', runtime?.provider === 'webgpu' ? 'good' : 'plain');
-  badge('model', runtime ? modelSizeLabel(runtime.modelBytes) : 'unknown');
+  badge('params', runtime ? paramLabel(runtime.params) : 'unknown', 'good');
+  badge('weights', runtime ? modelSizeLabel(runtime.modelBytes) : 'unknown');
   badge('per token', perToken);
   badge('total', millis);
-  if (runtime !== null && !runtime.webgpuAvailable) {
-    badge('note', 'no WebGPU in this browser, running the wasm build', 'warn');
-  }
+  // Worth saying out loud: with no runtime and no GPU requirement this runs anywhere.
+  badge('runs', 'no GPU, no wasm runtime', 'plain');
   resultPanel.hidden = false;
 }
 

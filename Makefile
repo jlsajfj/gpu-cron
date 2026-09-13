@@ -3,7 +3,7 @@
 PY := bin/py
 DATA := data/out
 
-.PHONY: setup data canonical paraphrase assemble train train-mini eval web test conformance clean
+.PHONY: setup data canonical paraphrase assemble train train-mini train-nano eval web fixture-web test conformance clean
 
 setup: ## create the venv and install CPU torch + numpy
 	python3 -m venv .venv
@@ -29,13 +29,18 @@ train: ## the default CPU run (configs/default.json)
 train-mini: ## the browser-sized model
 	$(PY) train/train.py --config configs/mini.json --out runs/mini
 
+train-nano: ## the model the browser demo ships (a few hundred thousand params)
+	$(PY) train/train.py --config configs/nano.json --out runs/nano --bf16
+
 eval: ## exact + semantic match on the held-out splits
 	$(PY) eval/evaluate.py --checkpoint runs/default/checkpoint.pt --out eval/results/default.json
 
-web: ## export int8 ONNX and bundle the browser demo
-	$(PY) export/export_onnx.py --checkpoint runs/mini/checkpoint.pt --int8 \
-		--out web/weights/model.int8.onnx
+web: ## export the browser weights and bundle the demo (no inference runtime)
+	$(PY) export/export_js.py --checkpoint runs/nano/checkpoint.pt --out web/weights/model
 	cd web && npm run build
+
+fixture-web: ## regenerate the fixture that pins web/src/forward.ts to the reference
+	$(PY) export/make_test_fixture.py
 
 conformance: ## regenerate the Python/JS agreement fixture
 	$(PY) grammar/generate_conformance.py

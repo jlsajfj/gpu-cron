@@ -12,10 +12,13 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DIST = path.join(ROOT, 'dist');
 const PUBLIC = path.join(ROOT, 'public');
 const SRC = path.join(ROOT, 'src');
-const ORT_DIST = path.join(ROOT, 'node_modules', 'onnxruntime-web', 'dist');
-const ORT_ASSETS = ['ort-wasm-simd-threaded.jsep.wasm', 'ort-wasm-simd-threaded.jsep.mjs'];
 const WEIGHTS = 'weights.generated.js';
-const MODEL = process.env.WEB_MODEL ? path.resolve(process.env.WEB_MODEL) : path.join(ROOT, 'weights', 'model.int8.onnx');
+// export/export_js.py writes a .bin plus a .json manifest; the page reads both from one
+// inlined module, so there is no fetch and no inference runtime to download.
+const MODEL =
+  process.env.WEB_MODEL !== undefined
+    ? path.resolve(process.env.WEB_MODEL).replace(/\.(bin|json)$/, '')
+    : path.join(ROOT, 'weights', 'model');
 
 const argv = new Set(process.argv.slice(2));
 const WATCH = argv.has('--watch');
@@ -44,48 +47,37 @@ function options() {
 }
 
 // The model is inlined so the page needs no fetch of its own; a missing model still builds —
-// the generated module reports it absent and the app shows the no-onnx panel.
+// the generated module reports it absent and the app shows the no-model panel.
 async function writeWeights() {
-  const name = path.relative(ROOT, MODEL);
+  const binPath = `${MODEL}.bin`;
+  const manifestPath = `${MODEL}.json`;
+  const name = path.basename(binPath);
   const out = path.join(DIST, WEIGHTS);
-  if (!existsSync(MODEL)) {
+  if (!existsSync(binPath) || !existsSync(manifestPath)) {
     const placeholder = [
       `export const MODEL_BASE64 = '';`,
       `export const MODEL_BYTES = 0;`,
       `export const MODEL_PRESENT = false;`,
       `export const MODEL_NAME = ${JSON.stringify(name)};`,
+      `export const MANIFEST = { d_model: 0, n_layer: 0, n_head: 0, d_ff: 0, max_len: 0, vocab: 0, tensors: [] };`,
       '',
     ].join('\n');
     await writeFile(out, placeholder, 'utf8');
     console.log(`  ${WEIGHTS.padEnd(34)} ${'no model'.padStart(10)}   (set WEB_MODEL or add ${name})`);
     return;
   }
-  const buffer = await readFile(MODEL);
+  const buffer = await readFile(binPath);
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const source = [
     `export const MODEL_BASE64 = ${JSON.stringify(buffer.toString('base64'))};`,
     `export const MODEL_BYTES = ${buffer.length};`,
     `export const MODEL_PRESENT = true;`,
     `export const MODEL_NAME = ${JSON.stringify(name)};`,
+    `export const MANIFEST = ${JSON.stringify(manifest)};`,
     '',
   ].join('\n');
   await writeFile(out, source, 'utf8');
   line(WEIGHTS, await sizeOf(out));
-}
-
-async function copyOrtAssets() {
-  const dir = path.join(DIST, 'ort');
-  await mkdir(dir, { recursive: true });
-  for (const asset of ORT_ASSETS) {
-    const from = path.join(ORT_DIST, asset);
-    if (!existsSync(from)) {
-      console.warn(`  missing onnxruntime-web asset: ${asset}`);
-      continue;
-    }
-    const to = path.join(dir, asset);
-    if (existsSync(to) && (await sizeOf(to)) === (await sizeOf(from))) continue;
-    await cp(from, to);
-    line(path.join('ort', asset), await sizeOf(to));
-  }
 }
 
 async function copyStatic() {
@@ -154,7 +146,6 @@ try {
   console.log(`${PRODUCTION ? 'building (production)' : 'building'} -> dist/`);
 
   await copyStatic();
-  await copyOrtAssets();
   await writeWeights();
 
   if (WATCH) {
