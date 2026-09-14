@@ -1,110 +1,110 @@
 {
-  "checkpoint": "runs/micro/checkpoint.pt",
-  "params": 486528,
-  "step": 7999,
+  "checkpoint": "runs/pico3/checkpoint.pt",
+  "params": 45376,
+  "step": 14999,
   "splits": {
     "test": {
       "n": 7608,
       "well_formed_pct": 100.0,
       "parses_pct": 100.0,
       "fires_pct": 100.0,
-      "exact_pct": 47.48,
-      "semantic_pct": 50.78,
+      "exact_pct": 84.41,
+      "semantic_pct": 87.24,
       "by_bucket": {
         "hour-range-step": {
           "n": 1012,
-          "semantic_pct": 54.05,
-          "exact_pct": 38.74
+          "semantic_pct": 66.11,
+          "exact_pct": 54.15
         },
         "dow-range": {
           "n": 850,
-          "semantic_pct": 8.59,
-          "exact_pct": 6.71
+          "semantic_pct": 90.47,
+          "exact_pct": 88.82
         },
         "weekly-on-day": {
           "n": 651,
-          "semantic_pct": 24.12,
-          "exact_pct": 24.12
+          "semantic_pct": 95.85,
+          "exact_pct": 95.85
         },
         "month-range": {
           "n": 620,
-          "semantic_pct": 14.19,
-          "exact_pct": 7.1
+          "semantic_pct": 76.77,
+          "exact_pct": 75.97
         },
         "month-list": {
           "n": 545,
-          "semantic_pct": 14.13,
-          "exact_pct": 14.13
+          "semantic_pct": 95.41,
+          "exact_pct": 95.41
         },
         "monthly-on-day": {
           "n": 536,
-          "semantic_pct": 96.27,
-          "exact_pct": 96.08
+          "semantic_pct": 94.4,
+          "exact_pct": 94.22
         },
         "yearly": {
           "n": 505,
-          "semantic_pct": 3.96,
-          "exact_pct": 3.96
+          "semantic_pct": 97.43,
+          "exact_pct": 97.43
         },
         "monthly-on-dom-range": {
           "n": 469,
-          "semantic_pct": 90.83,
-          "exact_pct": 88.91
+          "semantic_pct": 87.63,
+          "exact_pct": 86.35
         },
         "hour-range": {
           "n": 419,
-          "semantic_pct": 96.66,
-          "exact_pct": 93.32
+          "semantic_pct": 90.21,
+          "exact_pct": 79.71
         },
         "monthly-on-dom-list": {
           "n": 380,
-          "semantic_pct": 99.47,
-          "exact_pct": 99.47
+          "semantic_pct": 95.79,
+          "exact_pct": 95.79
         },
         "every-n-days": {
           "n": 306,
-          "semantic_pct": 86.27,
-          "exact_pct": 86.27
+          "semantic_pct": 82.03,
+          "exact_pct": 82.03
         },
         "dow-list": {
           "n": 295,
-          "semantic_pct": 13.22,
-          "exact_pct": 9.49
+          "semantic_pct": 96.95,
+          "exact_pct": 92.54
         },
         "dow-step": {
           "n": 290,
-          "semantic_pct": 94.48,
-          "exact_pct": 94.48
+          "semantic_pct": 88.62,
+          "exact_pct": 88.62
         },
         "minute-list": {
           "n": 225,
-          "semantic_pct": 96.0,
-          "exact_pct": 96.0
+          "semantic_pct": 84.0,
+          "exact_pct": 84.0
         },
         "weekend-at": {
           "n": 144,
-          "semantic_pct": 68.06,
-          "exact_pct": 68.06
+          "semantic_pct": 97.92,
+          "exact_pct": 97.92
         },
         "daily-at": {
           "n": 141,
-          "semantic_pct": 98.58,
-          "exact_pct": 97.87
+          "semantic_pct": 92.2,
+          "exact_pct": 91.49
         },
         "weekdays-at": {
           "n": 106,
-          "semantic_pct": 65.09,
-          "exact_pct": 65.09
+          "semantic_pct": 95.28,
+          "exact_pct": 85.85
         },
         "hour-list": {
           "n": 75,
-          "semantic_pct": 54.67,
-          "exact_pct": 54.67
+          "semantic_pct": 57.33,
+          "exact_pct": 57.33
         },
         "offset-n-minutes": {
           "n": 39,
-          "semantic_pct": 92.31,
-          "exact_pct": 92.31
+          "semantic_pct": 76.92,
+          "exact_pct": 76.92
         }
       },
       "truncated": 0,
@@ -112,25 +112,25 @@
         {
           "text": "6:15 AM on December 1st",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 * * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "06:15 on the first of December",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 1 * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "At 6:15 AM on the 1st day of December",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 1 * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
@@ -144,57 +144,57 @@
         {
           "text": "Run at 6:15 AM only on December's 1st",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 1 * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "Every December 1 at 6:15 AM",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 * * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "Start at 06:15 on Dec 1",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 1 * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "Reminder: 6:15 AM on December 1",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 * * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "At 06:15 AM, on day 1 of the month, only in December",
           "gold": "15 6 1 12 *",
-          "pred": "15 6 1 * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 6 1 12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "Midnight Monday through Thursday",
           "gold": "0 0 * * 1-4",
-          "pred": "0 0 * * 1-5",
-          "semantic": false,
-          "exact": false,
+          "pred": "0 0 * * 1-4",
+          "semantic": true,
+          "exact": true,
           "bucket": "dow-range"
         },
         {
           "text": "At midnight on Monday through Thursday",
           "gold": "0 0 * * 1-4",
-          "pred": "0 0 * * 1-5",
-          "semantic": false,
-          "exact": false,
+          "pred": "0 0 * * 1-4",
+          "semantic": true,
+          "exact": true,
           "bucket": "dow-range"
         },
         {
@@ -212,107 +212,107 @@
       "well_formed_pct": 100.0,
       "parses_pct": 100.0,
       "fires_pct": 100.0,
-      "exact_pct": 48.79,
-      "semantic_pct": 52.78,
+      "exact_pct": 81.29,
+      "semantic_pct": 84.89,
       "by_bucket": {
         "hour-range-step": {
           "n": 1358,
-          "semantic_pct": 62.22,
-          "exact_pct": 45.43
+          "semantic_pct": 64.95,
+          "exact_pct": 55.82
         },
         "dow-range": {
           "n": 1162,
-          "semantic_pct": 8.78,
-          "exact_pct": 7.14
+          "semantic_pct": 85.11,
+          "exact_pct": 83.13
         },
         "monthly-on-day": {
           "n": 878,
-          "semantic_pct": 96.01,
-          "exact_pct": 96.01
+          "semantic_pct": 93.39,
+          "exact_pct": 93.28
         },
         "hour-range": {
           "n": 858,
-          "semantic_pct": 93.36,
-          "exact_pct": 89.51
+          "semantic_pct": 86.6,
+          "exact_pct": 77.04
         },
         "monthly-on-dom-range": {
           "n": 704,
-          "semantic_pct": 94.46,
-          "exact_pct": 93.47
+          "semantic_pct": 87.78,
+          "exact_pct": 84.94
         },
         "month-list": {
           "n": 695,
-          "semantic_pct": 12.09,
-          "exact_pct": 12.09
+          "semantic_pct": 90.36,
+          "exact_pct": 90.36
         },
         "yearly": {
           "n": 692,
-          "semantic_pct": 3.76,
-          "exact_pct": 3.76
+          "semantic_pct": 92.05,
+          "exact_pct": 91.91
         },
         "month-range": {
           "n": 684,
-          "semantic_pct": 14.47,
-          "exact_pct": 7.46
+          "semantic_pct": 79.53,
+          "exact_pct": 78.07
         },
         "every-n-days": {
           "n": 620,
-          "semantic_pct": 73.71,
-          "exact_pct": 73.71
+          "semantic_pct": 70.97,
+          "exact_pct": 70.97
         },
         "weekly-on-day": {
           "n": 619,
-          "semantic_pct": 34.41,
-          "exact_pct": 34.41
+          "semantic_pct": 96.77,
+          "exact_pct": 96.77
         },
         "dow-list": {
           "n": 529,
-          "semantic_pct": 23.25,
-          "exact_pct": 13.04
+          "semantic_pct": 94.9,
+          "exact_pct": 79.77
         },
         "monthly-on-dom-list": {
           "n": 357,
-          "semantic_pct": 98.32,
-          "exact_pct": 98.32
+          "semantic_pct": 97.2,
+          "exact_pct": 97.2
         },
         "dow-step": {
           "n": 177,
-          "semantic_pct": 92.09,
-          "exact_pct": 92.09
+          "semantic_pct": 90.4,
+          "exact_pct": 90.4
         },
         "daily-at": {
           "n": 91,
-          "semantic_pct": 95.6,
-          "exact_pct": 95.6
+          "semantic_pct": 87.91,
+          "exact_pct": 86.81
         },
         "weekdays-at": {
           "n": 91,
-          "semantic_pct": 68.13,
-          "exact_pct": 68.13
+          "semantic_pct": 97.8,
+          "exact_pct": 87.91
         },
         "weekend-at": {
           "n": 88,
-          "semantic_pct": 79.55,
-          "exact_pct": 79.55
+          "semantic_pct": 98.86,
+          "exact_pct": 98.86
         },
         "minute-list": {
           "n": 85,
-          "semantic_pct": 92.94,
-          "exact_pct": 92.94
+          "semantic_pct": 77.65,
+          "exact_pct": 77.65
         },
         "every-n-hours": {
           "n": 42,
-          "semantic_pct": 95.24,
-          "exact_pct": 95.24
+          "semantic_pct": 83.33,
+          "exact_pct": 80.95
         },
         "offset-n-minutes": {
           "n": 29,
-          "semantic_pct": 100.0,
-          "exact_pct": 100.0
+          "semantic_pct": 72.41,
+          "exact_pct": 72.41
         },
         "hour-list": {
           "n": 22,
-          "semantic_pct": 86.36,
+          "semantic_pct": 81.82,
           "exact_pct": 81.82
         },
         "every-n-minutes": {
@@ -322,18 +322,18 @@
         },
         "business-hours": {
           "n": 3,
-          "semantic_pct": 100.0,
-          "exact_pct": 100.0
+          "semantic_pct": 66.67,
+          "exact_pct": 66.67
         },
         "every-minute": {
           "n": 1,
-          "semantic_pct": 100.0,
-          "exact_pct": 100.0
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
         },
         "every-hour": {
           "n": 1,
-          "semantic_pct": 100.0,
-          "exact_pct": 100.0
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
         }
       },
       "truncated": 0,
@@ -341,7 +341,7 @@
         {
           "text": "Run at 6:00 am on the fifteenth calendar day between January and July",
           "gold": "0 6 15 1-7 *",
-          "pred": "0 6 15 3,6,9,12 *",
+          "pred": "0 6 15 1,7 *",
           "semantic": false,
           "exact": false,
           "bucket": "month-range"
@@ -365,47 +365,47 @@
         {
           "text": "Begin at 01:30 on the days Tuesday up to Saturday",
           "gold": "30 1 * * 2-6",
-          "pred": "30 1 * * 0-6",
-          "semantic": false,
-          "exact": false,
+          "pred": "30 1 * * 2-6",
+          "semantic": true,
+          "exact": true,
           "bucket": "dow-range"
         },
         {
           "text": "9 pm the first day each January",
           "gold": "0 21 1 1 *",
-          "pred": "0 21 * * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "0 21 1 1 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "Only on November 1st at 10:15 pm",
           "gold": "15 22 1 11 *",
-          "pred": "15 22 1 * *",
-          "semantic": false,
-          "exact": false,
+          "pred": "15 22 1 11 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "yearly"
         },
         {
           "text": "Set for 6:00 am Sunday to Tuesday",
           "gold": "0 6 * * 0-2",
-          "pred": "0 6 * * 2",
-          "semantic": false,
-          "exact": false,
+          "pred": "0 6 * * 0-2",
+          "semantic": true,
+          "exact": true,
           "bucket": "dow-range"
         },
         {
           "text": "One forty-five in the afternoon between days 3 and 12",
           "gold": "45 13 3-12 * *",
-          "pred": "45 13 3-12 * *",
-          "semantic": true,
-          "exact": true,
+          "pred": "45 14 3-12 * *",
+          "semantic": false,
+          "exact": false,
           "bucket": "monthly-on-dom-range"
         },
         {
           "text": "Happens 01:45 on Wed and Thu",
           "gold": "45 1 * * 3-4",
-          "pred": "45 1 * * 0,2,4",
+          "pred": "45 13 * * 3,6",
           "semantic": false,
           "exact": false,
           "bucket": "dow-range"
@@ -413,25 +413,25 @@
         {
           "text": "3 AM, 6 AM, and 9 AM exactly",
           "gold": "0 3-9/3 * * *",
-          "pred": "0 3-9/3 * * *",
-          "semantic": true,
-          "exact": true,
+          "pred": "0 3-9 * * *",
+          "semantic": false,
+          "exact": false,
           "bucket": "hour-range-step"
         },
         {
           "text": "November and December 28 at 18:30 hours",
           "gold": "30 18 28 11,12 *",
-          "pred": "30 18 28 11 *",
-          "semantic": false,
-          "exact": false,
+          "pred": "30 18 28 11,12 *",
+          "semantic": true,
+          "exact": true,
           "bucket": "month-list"
         },
         {
           "text": "At every third hour from 1 AM to 1 PM, Monday to Friday",
           "gold": "0 1-13/3 * * 1-5",
-          "pred": "0 1-13/3 * * *",
+          "pred": "0 1-13/3 * * 1-5",
           "semantic": true,
-          "exact": false,
+          "exact": true,
           "bucket": "hour-range-step"
         }
       ]
@@ -439,14 +439,14 @@
   },
   "unconstrained_baseline": {
     "n": 1000,
-    "parses_pct": 99.1,
-    "exact_pct": 22.8,
-    "semantic_pct": 30.7
+    "parses_pct": 99.4,
+    "exact_pct": 78.9,
+    "semantic_pct": 84.5
   },
   "constrained_on_baseline_sample": {
     "n": 1000,
     "well_formed_pct": 100.0,
-    "exact_pct": 22.8,
-    "semantic_pct": 30.7
+    "exact_pct": 79.1,
+    "semantic_pct": 84.7
   }
 }

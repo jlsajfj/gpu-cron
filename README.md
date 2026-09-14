@@ -17,50 +17,35 @@ the page — no server, no API call, no post-processing.
 <!--RESULTS_TABLE-->
 | model | split | n | semantic | exact | valid | fires |
 |---|---|---:|---:|---:|---:|---:|
-| 45k | test (unseen expression) | 7,608 | **89.5%** | 87.0% | 100.0% | 100.0% |
-| 45k | holdout (unseen phrasing, seen expression) | 9,792 | **88.5%** | 85.5% | 100.0% | 100.0% |
-| 86k | test (unseen expression) | 7,608 | **90.8%** | 88.2% | 100.0% | 100.0% |
-| 86k | holdout (unseen phrasing, seen expression) | 9,792 | **91.0%** | 88.3% | 100.0% | 100.0% |
-| 486k | test (unseen expression) | 7,608 | **92.3%** | 89.9% | 100.0% | 100.0% |
-| 486k | holdout (unseen phrasing, seen expression) | 9,792 | **91.6%** | 89.4% | 100.0% | 100.0% |
-| 3.3M | test (unseen expression) | 1,200 | **27.0%** | 23.2% | 100.0% | 100.0% |
-| 3.3M | holdout (unseen phrasing, seen expression) | 1,200 | **18.8%** | 16.3% | 100.0% | 100.0% |
-| 25.4M | test (unseen expression) | 1,200 | **42.5%** | 37.4% | 100.0% | 100.0% |
-| 25.4M | holdout (unseen phrasing, seen expression) | 1,200 | **34.1%** | 29.8% | 100.0% | 100.0% |
+| 45k | test (unseen expression) | 7,608 | **87.2%** | 84.4% | 100.0% | 100.0% |
+| 45k | holdout (unseen phrasing, seen expression) | 9,792 | **84.9%** | 81.3% | 100.0% | 100.0% |
 
 Same weights, mask on vs. off, on the same held-out examples:
 
 | model | decoding | valid cron | semantic | exact |
 |---|---|---:|---:|---:|
-| 45k | constrained | 100.0% | 88.0% | 82.7% |
-| 45k | unconstrained | 99.5% | 88.0% | 82.7% |
+| 45k | constrained | 100.0% | 84.7% | 79.1% |
+| 45k | unconstrained | 99.4% | 84.5% | 78.9% |
 
-| 86k | constrained | 100.0% | 86.5% | 79.4% |
-| 86k | unconstrained | 99.3% | 86.4% | 79.3% |
+**The 45k row is the shipped model**, trained and evaluated on lowercased input. The other
+sizes are being retrained and are deliberately absent rather than stale.
 
-| 486k | constrained | 100.0% | 87.2% | 80.7% |
-| 486k | unconstrained | 99.8% | 87.2% | 80.7% |
+Two earlier sets of numbers were published here and both were wrong, in ways worth recording.
+The first was a 25.4M model scoring 42.5% — it turned out to be a 3,000-step run with
+`dropout: 0.1` on a pre-augmentation dataset: undertrained, not out of capacity. The second
+was this same 45k model scoring 89.5%, measured on capitalized input only. The corpus
+capitalizes every day and month name, so the test split contained no lowercase day names and
+the metric was describing text nobody types: `every tuesday at 2 pm` decoded to `0 14 * * *`,
+dropping the day, while `every Tuesday at 2pm` worked.
 
-| 3.3M | constrained | 100.0% | 27.0% | 23.2% |
-| 3.3M | unconstrained | 86.4% | 25.3% | 21.8% |
-
-| 25.4M | constrained | 100.0% | 42.5% | 37.4% |
-| 25.4M | unconstrained | 92.4% | 39.6% | 35.2% |
-
-**The 45k / 86k / 486k rows are the comparable ones**: same recipe, trained to convergence
-(15k / 12k / 8k steps, `dropout: 0`), scored on the full splits. Accuracy rises with size and
-then flattens — 486k buys 2.8 points of semantic match over 45k for 10x the weights, which is
-why the demo ships 45k.
-
-**The 3.3M and 25.4M rows are stale** and are shown only so the old numbers are not silently
-disappearing. They are 3,000-step runs with `dropout: 0.1`, trained before the canonical-echo
-augmentation, and their `val_loss` (0.27 and 0.18 against 0.03 for the small models) says they
-are undertrained rather than out of capacity. Retraining them to the matched recipe is
-outstanding work; do not read the apparent size inversion as a result.
+The prompt is now lowercased at every encoder, leaving one form to learn. Models trained
+before that change collapse to roughly 50% against the fixed encoder, which is what the 86k
+and 486k points measured on re-scoring and is the clearest evidence of how much the old
+numbers overstated.
 
 The mask-on/off block is a 1,000-example sample of the same held-out data. The mask does not
-just make the output valid — it is the more accurate of the two on the undertrained models,
-and the constrained column is valid cron by construction rather than by measurement.
+just make the output valid — it is the more accurate of the two, and the constrained column is
+valid cron by construction rather than by measurement.
 <!--/RESULTS_TABLE-->
 
 ## Why constrained decoding
