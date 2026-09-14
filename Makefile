@@ -18,7 +18,10 @@ canonical: ## cron -> canonical English (cronstrue), validated by cron-parser
 paraphrase: canonical ## canonical English -> many user phrasings (LLM; resumable, costs money)
 	node data/paraphrase.mjs
 
-assemble: paraphrase ## build train/val/test/holdout splits
+augment: ## deterministic coverage of number spellings (no API, seeded)
+	node data/augment.mjs
+
+assemble: paraphrase augment ## build train/val/test/holdout splits
 	$(PY) data/assemble.py
 
 data: assemble
@@ -55,7 +58,7 @@ demo: ## build and serve the demo, opening a browser (the thing to run after a c
 	npm run demo
 
 web: ## export the shipped model and bundle dist/ + demo/dist/ (no inference runtime)
-	$(PY) export/export_js.py --checkpoint runs/pico/checkpoint.pt --out weights/model --dtype int8
+	$(PY) export/export_js.py --checkpoint $(CKPT) --out weights/model --dtype int8
 	npm run build
 
 fixture-web: ## regenerate the fixture the GPU conformance harness pins against

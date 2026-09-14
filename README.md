@@ -103,6 +103,25 @@ forty paraphrases and not one of them was "every 15 minutes". The model had neve
 most obvious way to say the most common schedule. Adding the canonical form back costs
 nothing and makes the plain register representable for all 10,797 expressions.
 
+**Stage 2c — surface-form coverage (`data/augment.mjs`).** The same failure as the
+canonical echo, one level down. The LLM is uneven about how it *spells* a number: it
+produced 1,559 phrasings containing "fifteenth" and, across 122,711 training pairs, zero
+containing "second". The model therefore learned spellings rather than values — `15th of
+the month` put 15 in the day-of-month field *and* in the hour field, `first of the month`
+and `second of the month` decoded to the same expression, and `every other hour` put the
+step in the minute field.
+
+"second" was absent for a specific reason: the phrasing filter banned `seconds?` to keep
+sub-minute intervals out, and that pattern also matches the ordinal ("the second of the
+month") and the step ("every second hour"). The filter now bans only the sub-minute sense.
+
+This stage walks the grid directly — every day/step value, in every spelling (`2`, `2nd`,
+`second`, `two`), in every field it can legally occupy — rather than hoping the LLM covers
+it. It is templated and seeded, so it costs nothing and regenerates byte-identically. Day
+numbers with no stated time are pinned to midnight, which is what stops the day digit from
+being copied into the hour. Expressions already present in `canonical.jsonl` keep that
+file's split, so an augmented phrasing can never move a test expression into train.
+
 **Stage 3 — splits (`data/assemble.py`).** Splits hold out at two levels, and both are
 reported:
 
@@ -111,8 +130,8 @@ reported:
 | `test` | the expression *and* its canonical English were never trained on |
 | `holdout` | one phrasing per training expression, held back before training — isolates "new way of saying a known schedule" from "new schedule" |
 
-The finished dataset is **144,483 pairs over 10,797 distinct expressions**: 122,711 train,
-4,372 val, 7,608 test, 9,792 holdout.
+The finished dataset is **155,277 pairs over 10,870 distinct expressions**: 131,740 train,
+4,824 val, 8,262 test, 10,451 holdout.
 
 ### Cost
 
@@ -146,6 +165,10 @@ about cron.
 | Month and day names (`JAN`, `MON`) | valid cron, never emitted | same reason |
 | `@daily`-style macros | not supported; always 5 fields | keeps the output space a single grammar |
 | Timezones | out of scope entirely | cron has no timezone field; a phrasing mentioning one is filtered out of the dataset |
+| "the second of the month" | ordinal: day-of-month `2` | "second" is an ordinal after an article, and the dataset now teaches all four spellings of every day number (`2`, `2nd`, `second`, `two`) |
+| "every second hour" | step: `0 */2 * * *` | "second" after "every" is a step, not an ordinal; "every other hour" and "every 2nd hour" render identically |
+| "every 30 seconds" and any sub-minute interval | not generated; filtered out of the dataset | cron has no seconds field. The decoder still emits *some* expression (the grammar has no way to decline), so this is a known wrong answer, not a refusal |
+| Which spelling a number uses | never meaningful on its own | `2`, `2nd`, `second` and `two` are the same value; only the surrounding words decide which field it lands in |
 | "end of month" | not generated | needs `L`, which the target dialect does not have; the nearest expressible thing (the 28th) is not what the user meant |
 | Leading zeros (`05 * * * *`) | valid, never emitted | canonical output |
 | List ordering | terms must be strictly ascending and non-overlapping | narrows the language slightly (cron-parser also allows `*/2,5`) but makes "no duplicate values" checkable one character at a time, and matches how people write lists |
@@ -172,7 +195,7 @@ export/         checkpoint -> ONNX + int8 quantization
 
 ```bash
 make setup        # venv + CPU torch + numpy, and npm install in web/
-make data         # ~1 min for stage 1, then the API-backed stage 2
+make data         # ~1 min for stage 1, then the API-backed stage 2, then seeded stage 2c
 make train        # the default CPU run (configs/default.json)
 make train-mini   # the browser-sized model
 make eval         # exact + semantic match on test and holdout

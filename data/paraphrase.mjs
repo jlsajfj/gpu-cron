@@ -24,7 +24,9 @@ natural-language phrasings a person would actually type into a "run this on a sc
 Hard rules:
 - Every phrasing must describe EXACTLY the same schedule: identical times of day, identical days.
 - Never add or remove a day, a time, or an interval.
-- Never mention timezones, UTC, seconds, years, or relative dates ("tomorrow", "next week").
+- Never mention timezones, UTC, years, or relative dates ("tomorrow", "next week").
+- Cron has no seconds field: never express a sub-minute interval. "second" as an ordinal
+  ("the second of the month") or as a step ("every second hour") is encouraged.
 - 12-hour clock must carry am/pm. Use "noon" for 12:00 PM and "midnight" for 12:00 AM.
 - Mon-Fri is "weekdays". Saturday+Sunday is "weekends". A single day may be named ("on Tuesdays").
 - Vary length from about 3 to 16 words, and vary register: terse fragments, "remind me to"
@@ -71,7 +73,9 @@ async function callOpenAI(messages, attempt = 0) {
   return JSON.parse(choice.message.content);
 }
 
-const BANNED = /\b(utc|gmt|timezone|time zone|seconds?|tomorrow|yesterday|next week|next month)\b/i;
+// "second" is an ordinal ("the second of the month") and a step ("every second hour");
+// only the sub-minute sense is unrepresentable in 5-field cron, so ban that alone.
+const BANNED = /\b(utc|gmt|timezone|time zone|tomorrow|yesterday|next week|next month)\b|\bseconds\b|\b\d+\s*seconds?\b|\bevery\s+second\s*$/i;
 
 const hasScheduleWord =
   /\b(every|each|daily|weekly|monthly|weekday|weekend|hour|minute|day|days|month|months|noon|midnight|morning|afternoon|evening|night|mon|tue|wed|thu|fri|sat|sun)\b/i;
