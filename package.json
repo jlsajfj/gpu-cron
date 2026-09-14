@@ -21,6 +21,8 @@
     "pretypecheck": "npm run generate",
     "pretest": "npm run generate",
     "build": "node scripts/build.mjs --minify",
+    "demo": "node scripts/build.mjs && node scripts/serve.mjs --open",
+    "serve": "node scripts/serve.mjs",
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

@@ -3,7 +3,7 @@
 PY := bin/py
 DATA := data/out
 
-.PHONY: setup data canonical paraphrase assemble train train-mini train-micro train-nano train-pico train-femto eval eval-all web fixture-web test test-gpu test-demo conformance clean
+.PHONY: setup demo data canonical paraphrase assemble train train-mini train-micro train-nano train-pico train-femto eval eval-all web fixture-web test test-gpu test-demo conformance clean
 
 setup: ## create the venv and install CPU torch + numpy
 	python3 -m venv .venv
@@ -50,6 +50,9 @@ eval-all: ## evaluate every run, then re-render the README's results table
 		$(PY) eval/evaluate.py --checkpoint $$ckpt --out eval/results/$$name.json || exit 1; \
 	done
 	$(PY) eval/render_table.py eval/results/*.json
+
+demo: ## build and serve the demo, opening a browser (the thing to run after a clone)
+	npm run demo
 
 web: ## export the shipped model and bundle dist/ + demo/dist/ (no inference runtime)
 	$(PY) export/export_js.py --checkpoint runs/pico/checkpoint.pt --out weights/model --dtype int8
