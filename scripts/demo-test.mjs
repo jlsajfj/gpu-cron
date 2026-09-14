@@ -20,11 +20,13 @@ const DEMO_DIST = join(ROOT, 'demo', 'dist');
 const CHROMIUM = process.env.CHROMIUM_BIN || 'chromium';
 
 // An expression the constrained decoder cannot produce is the failure this is looking for.
-const CASES = [
-  { prompt: 'every 15 minutes', fields: 5 },
-  { prompt: 'every weekday at 9am', fields: 5 },
-  { prompt: 'first of the month at midnight', fields: 5 },
-];
+const DEFAULT_PROMPTS = ['every 15 minutes', 'every weekday at 9am', 'first of the month at midnight'];
+
+// --prompt "..." (repeatable) checks specific phrases instead of the default set.
+const argv = process.argv.slice(2);
+const requested = argv.flatMap((arg, index) => (arg === '--prompt' ? [argv[index + 1]] : []));
+const PROMPTS = requested.length > 0 ? requested : DEFAULT_PROMPTS;
+const CASES = PROMPTS.map((prompt) => ({ prompt, fields: 5 }));
 
 const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -146,6 +148,7 @@ async function run() {
     await cdp.send('Page.navigate', { url });
     await sleep(3000);
 
+    console.log(`  backend  ${await cdp.evaluate('navigator.gpu ? "navigator.gpu present" : "navigator.gpu MISSING"')}`);
     // A browser without WebGPU cannot run this library at all, which is a skip, not a failure.
     const adapter = await cdp.evaluate(
       "(async () => (navigator.gpu ? !!(await navigator.gpu.requestAdapter()) : false))()",

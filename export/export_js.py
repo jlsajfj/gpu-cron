@@ -208,7 +208,7 @@ def main() -> None:
     worst = 0.0
     dumped: list[dict] = []
     for text in prompts:
-        ids = [257, *(text + " => ").encode()]
+        ids = [257, *(text.lower() + " => ").encode()]
         with torch.no_grad():
             torch_logits = model(torch.tensor([ids]))[0, -1].numpy()
         got = forward(weights, ids, cfg.n_head)[-1]

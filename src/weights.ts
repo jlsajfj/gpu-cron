@@ -12,6 +12,8 @@ export interface TensorEntry {
 }
 
 export interface ModelManifest {
+  /** Recorded by the export for reference; the tensors carry their own kinds. */
+  dtype?: string;
   d_model: number;
   n_layer: number;
   n_head: number;

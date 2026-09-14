@@ -15,7 +15,9 @@ PROMPT_SUFFIX = " => "
 def encode_example(text: str, cron: str) -> tuple[list[int], list[int]]:
     """`labels[i]` is `ids[i + 1]`: lining it up with `ids[i]` instead makes this a copy
     task — near-zero loss and nothing decodes — rather than next-token prediction."""
-    prompt = (text + PROMPT_SUFFIX).encode("utf-8")
+    # Lowercased to match src/tokenizer.ts: day and month names are capitalized in the corpus
+    # almost without exception, and bytes are the vocabulary, so one case must be picked.
+    prompt = (text.lower() + PROMPT_SUFFIX).encode("utf-8")
     target = list(cron.encode("utf-8")) + [EOS]
     ids = [BOS, *prompt, *target]
     labels = [-100] * len(ids)

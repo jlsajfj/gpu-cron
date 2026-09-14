@@ -76,7 +76,7 @@ class ConstrainedDecoder:
         was_training = self.model.training
         self.model.eval()
 
-        prompts = [[BOS, *(t + PROMPT_SUFFIX).encode("utf-8")] for t in texts]
+        prompts = [[BOS, *(t.lower() + PROMPT_SUFFIX).encode("utf-8")] for t in texts]
         lengths = [len(p) for p in prompts]
         width = max(lengths)
         idx = torch.full((len(prompts), width), PAD, dtype=torch.long, device=device)

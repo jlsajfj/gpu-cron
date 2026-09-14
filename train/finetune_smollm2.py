@@ -42,7 +42,7 @@ def load_rows(path: Path, limit: int | None = None) -> list[dict]:
 def build_examples(rows, tokenizer, max_len: int):
     out = []
     for row in rows:
-        prompt = tokenizer(f"{row['text']}{PROMPT_SUFFIX}", add_special_tokens=False)["input_ids"]
+        prompt = tokenizer(f"{row['text'].lower()}{PROMPT_SUFFIX}", add_special_tokens=False)["input_ids"]
         target = tokenizer(row["cron"], add_special_tokens=False)["input_ids"] + [
             tokenizer.eos_token_id
         ]
@@ -147,7 +147,7 @@ def main() -> None:
         rows = load_rows(Path(args.data_dir) / "test.jsonl", args.sample)
         with torch.no_grad():
             for row in rows:
-                ids = tokenizer(f"{row['text']}{PROMPT_SUFFIX}", return_tensors="pt")["input_ids"].to(device)
+                ids = tokenizer(f"{row['text'].lower()}{PROMPT_SUFFIX}", return_tensors="pt")["input_ids"].to(device)
                 state = automaton.start()
                 for _ in range(64):
                     logits = model(input_ids=ids).logits[0, -1, :]
