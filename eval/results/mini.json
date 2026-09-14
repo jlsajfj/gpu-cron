@@ -1,0 +1,103 @@
+{
+  "checkpoint": "runs/mini/checkpoint.pt",
+  "params": 3263488,
+  "step": 2999,
+  "splits": {
+    "test": {
+      "n": 1200,
+      "well_formed_pct": 100.0,
+      "parses_pct": 100.0,
+      "fires_pct": 100.0,
+      "exact_pct": 23.25,
+      "semantic_pct": 27.0,
+      "by_bucket": {
+        "hour-range-step": {
+          "n": 313,
+          "semantic_pct": 13.1,
+          "exact_pct": 5.75
+        },
+        "dow-range": {
+          "n": 251,
+          "semantic_pct": 50.2,
+          "exact_pct": 49.4
+        },
+        "month-range": {
+          "n": 204,
+          "semantic_pct": 1.96,
+          "exact_pct": 1.96
+        },
+        "month-list": {
+          "n": 180,
+          "semantic_pct": 59.44,
+          "exact_pct": 59.44
+        },
+        "monthly-on-dom-range": {
+          "n": 135,
+          "semantic_pct": 17.04,
+          "exact_pct": 2.22
+        },
+        "yearly": {
+          "n": 117,
+          "semantic_pct": 19.66,
+          "exact_pct": 19.66
+        }
+      },
+      "truncated": 0,
+      "examples": []
+    },
+    "holdout": {
+      "n": 1200,
+      "well_formed_pct": 100.0,
+      "parses_pct": 100.0,
+      "fires_pct": 100.0,
+      "exact_pct": 16.33,
+      "semantic_pct": 18.83,
+      "by_bucket": {
+        "hour-range-step": {
+          "n": 299,
+          "semantic_pct": 6.35,
+          "exact_pct": 2.68
+        },
+        "dow-range": {
+          "n": 257,
+          "semantic_pct": 37.35,
+          "exact_pct": 36.96
+        },
+        "yearly": {
+          "n": 168,
+          "semantic_pct": 12.5,
+          "exact_pct": 12.5
+        },
+        "monthly-on-dom-range": {
+          "n": 162,
+          "semantic_pct": 12.96,
+          "exact_pct": 1.85
+        },
+        "month-list": {
+          "n": 161,
+          "semantic_pct": 33.54,
+          "exact_pct": 33.54
+        },
+        "month-range": {
+          "n": 153,
+          "semantic_pct": 9.8,
+          "exact_pct": 9.8
+        }
+      },
+      "truncated": 0,
+      "examples": []
+    }
+  },
+  "unconstrained_baseline": {
+    "n": 1200,
+    "parses_pct": 86.42,
+    "exact_pct": 21.75,
+    "semantic_pct": 25.33
+  },
+  "constrained_on_baseline_sample": {
+    "n": 1200,
+    "well_formed_pct": 100.0,
+    "exact_pct": 23.25,
+    "semantic_pct": 27.0
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "comment": "226k params. Retrained to the matched recipe (dropout 0) so the curve points are comparable.",
+  "d_model": 64,
+  "n_layer": 4,
+  "n_head": 4,
+  "d_ff": 256,
+  "max_len": 192,
+  "dropout": 0.0,
+  "batch_size": 128,
+  "lr": 0.006,
+  "steps": 10000
+}

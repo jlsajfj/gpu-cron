@@ -1,0 +1,207 @@
+{
+ "d_model": 32,
+ "n_layer": 3,
+ "n_head": 2,
+ "d_ff": 96,
+ "max_len": 192,
+ "vocab": 259,
+ "dtype": "int8",
+ "tensors": [
+  {
+   "name": "tok.weight",
+   "kind": "i8",
+   "shape": [
+    259,
+    32
+   ],
+   "offset": 0,
+   "scaleOffset": 8288
+  },
+  {
+   "name": "pos.weight",
+   "kind": "i8",
+   "shape": [
+    192,
+    32
+   ],
+   "offset": 9324,
+   "scaleOffset": 15468
+  },
+  {
+   "name": "blocks.0.attn.qkv.weight",
+   "kind": "i8",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 16236,
+   "scaleOffset": 19308
+  },
+  {
+   "name": "blocks.0.attn.proj.weight",
+   "kind": "i8",
+   "shape": [
+    32,
+    32
+   ],
+   "offset": 19692,
+   "scaleOffset": 20716
+  },
+  {
+   "name": "blocks.0.mlp.fc.weight",
+   "kind": "i8",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 20844,
+   "scaleOffset": 23916
+  },
+  {
+   "name": "blocks.0.mlp.proj.weight",
+   "kind": "i8",
+   "shape": [
+    32,
+    96
+   ],
+   "offset": 24300,
+   "scaleOffset": 27372
+  },
+  {
+   "name": "blocks.0.norm1.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 27500
+  },
+  {
+   "name": "blocks.0.norm2.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 27628
+  },
+  {
+   "name": "blocks.1.attn.qkv.weight",
+   "kind": "i8",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 27756,
+   "scaleOffset": 30828
+  },
+  {
+   "name": "blocks.1.attn.proj.weight",
+   "kind": "i8",
+   "shape": [
+    32,
+    32
+   ],
+   "offset": 31212,
+   "scaleOffset": 32236
+  },
+  {
+   "name": "blocks.1.mlp.fc.weight",
+   "kind": "i8",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 32364,
+   "scaleOffset": 35436
+  },
+  {
+   "name": "blocks.1.mlp.proj.weight",
+   "kind": "i8",
+   "shape": [
+    32,
+    96
+   ],
+   "offset": 35820,
+   "scaleOffset": 38892
+  },
+  {
+   "name": "blocks.1.norm1.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 39020
+  },
+  {
+   "name": "blocks.1.norm2.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 39148
+  },
+  {
+   "name": "blocks.2.attn.qkv.weight",
+   "kind": "i8",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 39276,
+   "scaleOffset": 42348
+  },
+  {
+   "name": "blocks.2.attn.proj.weight",
+   "kind": "i8",
+   "shape": [
+    32,
+    32
+   ],
+   "offset": 42732,
+   "scaleOffset": 43756
+  },
+  {
+   "name": "blocks.2.mlp.fc.weight",
+   "kind": "i8",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 43884,
+   "scaleOffset": 46956
+  },
+  {
+   "name": "blocks.2.mlp.proj.weight",
+   "kind": "i8",
+   "shape": [
+    32,
+    96
+   ],
+   "offset": 47340,
+   "scaleOffset": 50412
+  },
+  {
+   "name": "blocks.2.norm1.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 50540
+  },
+  {
+   "name": "blocks.2.norm2.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 50668
+  },
+  {
+   "name": "norm_f.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 50796
+  }
+ ]
+}

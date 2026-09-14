@@ -1,0 +1,6 @@
+numpy>=2.0
+
+# export/export_onnx.py; onnxscript is required by torch's exporter, not by onnx itself.
+onnx>=1.22
+onnxruntime>=1.30
+onnxscript>=0.7

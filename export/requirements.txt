@@ -1,0 +1,4 @@
+# export/export_onnx.py; torch comes from the repo venv, so install with bin/py.
+onnx>=1.22
+onnxruntime>=1.30
+onnxscript>=0.7

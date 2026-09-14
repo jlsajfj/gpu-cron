@@ -1,0 +1,12 @@
+{
+  "comment": "88k params, ~86 KB at int8. The safer small option if 46k loses too much.",
+  "d_model": 48,
+  "n_layer": 3,
+  "n_head": 3,
+  "d_ff": 128,
+  "max_len": 192,
+  "dropout": 0.0,
+  "batch_size": 128,
+  "lr": 0.007,
+  "steps": 12000
+}

@@ -1,0 +1,4 @@
+# train/finetune_smollm2.py only; the default CPU run does not need these (and the box has no GPU).
+torch>=2.4
+transformers>=4.45
+peft>=0.13

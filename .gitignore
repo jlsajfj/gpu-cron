@@ -1,7 +1,7 @@
 # Generated dataset (reproducible from data/ + the documented seed; ~20MB)
 data/out/
 
-# Training runs and checkpoints (the browser demo ships the quantized export instead)
+# Training runs and checkpoints
 runs/
 *.pt
 
@@ -10,16 +10,21 @@ node_modules/
 __pycache__/
 *.pyc
 
-web/dist/
+# Build outputs. src/weights.generated.ts is the inlined model, written by scripts/build.mjs.
+dist/
+demo/dist/
+src/weights.generated.ts
 
-# The quantized browser model IS committed: the demo is the deliverable, and a fresh clone
-# cannot rebuild it without first regenerating the dataset and retraining. Everything else
-# generated stays out of git.
-web/weights/*.onnx
-!web/weights/model.int8.onnx
-!web/weights/.gitkeep
+# The exported browser model IS committed: a fresh clone cannot rebuild it without first
+# regenerating the dataset and retraining. Only the intermediate ONNX exports stay out.
+weights/*.onnx
 
 .DS_Store
 
-# Training logs kept at the repo root during runs
+# Run logs kept at the repo root during runs (training and eval)
 runs_*.log
+eval_*.log
+test/gpu-bundle.js
+
+# Superseded: the demo reads the raw export, not an ONNX graph
+weights/*.onnx

@@ -1,0 +1,12 @@
+{
+  "comment": "Seconds-long config used by tests and CI to prove the loop runs end to end.",
+  "d_model": 128,
+  "n_layer": 2,
+  "n_head": 4,
+  "d_ff": 512,
+  "max_len": 192,
+  "dropout": 0.0,
+  "batch_size": 64,
+  "lr": 0.005,
+  "steps": 200
+}

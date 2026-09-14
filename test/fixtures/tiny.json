@@ -1,0 +1,141 @@
+{
+ "d_model": 32,
+ "n_layer": 2,
+ "n_head": 2,
+ "d_ff": 64,
+ "max_len": 192,
+ "vocab": 259,
+ "dtype": "fp32",
+ "tensors": [
+  {
+   "name": "tok.weight",
+   "kind": "f32",
+   "shape": [
+    259,
+    32
+   ],
+   "offset": 0
+  },
+  {
+   "name": "pos.weight",
+   "kind": "f32",
+   "shape": [
+    192,
+    32
+   ],
+   "offset": 33152
+  },
+  {
+   "name": "blocks.0.attn.qkv.weight",
+   "kind": "f32",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 57728
+  },
+  {
+   "name": "blocks.0.attn.proj.weight",
+   "kind": "f32",
+   "shape": [
+    32,
+    32
+   ],
+   "offset": 70016
+  },
+  {
+   "name": "blocks.0.mlp.fc.weight",
+   "kind": "f32",
+   "shape": [
+    64,
+    32
+   ],
+   "offset": 74112
+  },
+  {
+   "name": "blocks.0.mlp.proj.weight",
+   "kind": "f32",
+   "shape": [
+    32,
+    64
+   ],
+   "offset": 82304
+  },
+  {
+   "name": "blocks.0.norm1.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 90496
+  },
+  {
+   "name": "blocks.0.norm2.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 90624
+  },
+  {
+   "name": "blocks.1.attn.qkv.weight",
+   "kind": "f32",
+   "shape": [
+    96,
+    32
+   ],
+   "offset": 90752
+  },
+  {
+   "name": "blocks.1.attn.proj.weight",
+   "kind": "f32",
+   "shape": [
+    32,
+    32
+   ],
+   "offset": 103040
+  },
+  {
+   "name": "blocks.1.mlp.fc.weight",
+   "kind": "f32",
+   "shape": [
+    64,
+    32
+   ],
+   "offset": 107136
+  },
+  {
+   "name": "blocks.1.mlp.proj.weight",
+   "kind": "f32",
+   "shape": [
+    32,
+    64
+   ],
+   "offset": 115328
+  },
+  {
+   "name": "blocks.1.norm1.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 123520
+  },
+  {
+   "name": "blocks.1.norm2.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 123648
+  },
+  {
+   "name": "norm_f.weight",
+   "kind": "f32",
+   "shape": [
+    32
+   ],
+   "offset": 123776
+  }
+ ]
+}

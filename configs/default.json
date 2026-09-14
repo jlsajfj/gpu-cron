@@ -1,0 +1,12 @@
+{
+  "comment": "Overnight-on-CPU default: ~25M params from scratch on 16 ARM cores. lr is 1e-3, not the 3e-3 a model this size invites: at 3e-3 validation loss climbed from step 500 onward while training loss kept falling.",
+  "d_model": 512,
+  "n_layer": 8,
+  "n_head": 8,
+  "d_ff": 2048,
+  "max_len": 192,
+  "dropout": 0.1,
+  "batch_size": 64,
+  "lr": 0.001,
+  "steps": 3000
+}

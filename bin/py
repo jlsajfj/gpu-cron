@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# The manylinux torch wheel needs a real libstdc++, which nix's python does not provide.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export LD_LIBRARY_PATH="/nix/store/pjnjsjr5l7qgc5qlhldjgafxsn6b5pmx-ld-library-path/share/nix-ld/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$ROOT/.venv/bin/python" "$@"
