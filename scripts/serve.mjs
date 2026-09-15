@@ -70,7 +70,7 @@ server.on('error', (error) => {
 server.listen(PORT, '127.0.0.1', async () => {
   const app = await stat(join(DIST, 'app.js'));
   const url = `http://127.0.0.1:${PORT}/`;
-  console.log(`nl-cron demo  ${url}`);
+  console.log(`human-cron demo  ${url}`);
   console.log(`  app.js ${(app.size / 1024).toFixed(1)} KB (weights inlined)`);
   console.log('  needs WebGPU: Safari 26+, Chrome 113+, Edge 113+, Firefox 141+');
   console.log('  ctrl-c to stop');

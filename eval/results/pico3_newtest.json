@@ -1,0 +1,557 @@
+{
+  "checkpoint": "runs/pico3/checkpoint.pt",
+  "params": 45376,
+  "step": 14999,
+  "splits": {
+    "test": {
+      "n": 8998,
+      "well_formed_pct": 100.0,
+      "parses_pct": 100.0,
+      "fires_pct": 100.0,
+      "exact_pct": 75.61,
+      "semantic_pct": 78.05,
+      "by_bucket": {
+        "hour-range-step": {
+          "n": 1012,
+          "semantic_pct": 66.11,
+          "exact_pct": 54.15
+        },
+        "dow-range": {
+          "n": 849,
+          "semantic_pct": 90.46,
+          "exact_pct": 88.93
+        },
+        "weekly-on-day": {
+          "n": 651,
+          "semantic_pct": 95.85,
+          "exact_pct": 95.85
+        },
+        "month-range": {
+          "n": 620,
+          "semantic_pct": 76.77,
+          "exact_pct": 75.97
+        },
+        "aug-dom-time": {
+          "n": 592,
+          "semantic_pct": 42.4,
+          "exact_pct": 42.4
+        },
+        "month-list": {
+          "n": 545,
+          "semantic_pct": 95.41,
+          "exact_pct": 95.41
+        },
+        "monthly-on-day": {
+          "n": 536,
+          "semantic_pct": 94.4,
+          "exact_pct": 94.22
+        },
+        "yearly": {
+          "n": 505,
+          "semantic_pct": 97.43,
+          "exact_pct": 97.43
+        },
+        "monthly-on-dom-range": {
+          "n": 469,
+          "semantic_pct": 87.63,
+          "exact_pct": 86.35
+        },
+        "hour-range": {
+          "n": 419,
+          "semantic_pct": 90.21,
+          "exact_pct": 79.71
+        },
+        "monthly-on-dom-list": {
+          "n": 380,
+          "semantic_pct": 95.79,
+          "exact_pct": 95.79
+        },
+        "aug-time": {
+          "n": 314,
+          "semantic_pct": 4.46,
+          "exact_pct": 4.46
+        },
+        "every-n-days": {
+          "n": 306,
+          "semantic_pct": 82.03,
+          "exact_pct": 82.03
+        },
+        "dow-list": {
+          "n": 295,
+          "semantic_pct": 96.95,
+          "exact_pct": 92.54
+        },
+        "dow-step": {
+          "n": 290,
+          "semantic_pct": 88.62,
+          "exact_pct": 88.62
+        },
+        "minute-list": {
+          "n": 225,
+          "semantic_pct": 84.0,
+          "exact_pct": 84.0
+        },
+        "aug-month": {
+          "n": 189,
+          "semantic_pct": 51.32,
+          "exact_pct": 49.74
+        },
+        "weekend-at": {
+          "n": 144,
+          "semantic_pct": 97.92,
+          "exact_pct": 97.92
+        },
+        "daily-at": {
+          "n": 141,
+          "semantic_pct": 92.2,
+          "exact_pct": 91.49
+        },
+        "weekdays-at": {
+          "n": 106,
+          "semantic_pct": 95.28,
+          "exact_pct": 85.85
+        },
+        "aug-dom-notime": {
+          "n": 91,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "hour-list": {
+          "n": 75,
+          "semantic_pct": 57.33,
+          "exact_pct": 57.33
+        },
+        "aug-step-minute": {
+          "n": 67,
+          "semantic_pct": 13.43,
+          "exact_pct": 13.43
+        },
+        "aug-step-day": {
+          "n": 59,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "aug-step-hour": {
+          "n": 39,
+          "semantic_pct": 41.03,
+          "exact_pct": 33.33
+        },
+        "offset-n-minutes": {
+          "n": 39,
+          "semantic_pct": 76.92,
+          "exact_pct": 76.92
+        },
+        "aug-minute-ordinal": {
+          "n": 22,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "aug-dow-abbr": {
+          "n": 12,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "aug-dom-list": {
+          "n": 6,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        }
+      },
+      "truncated": 0,
+      "examples": [
+        {
+          "text": "on the 2nd in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 2 2 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "on the second in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 0 1 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "the 2nd in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 2 1 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "the second in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 0 1 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "2nd in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 2 1 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "second in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 0 1 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "day 2 in the first half of the year",
+          "gold": "0 0 2 1-6 *",
+          "pred": "30 2 2 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "on the 4th of each quarter month",
+          "gold": "0 0 4 1,4,7,10 *",
+          "pred": "0 4 4 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "on the fourth of each quarter month",
+          "gold": "0 0 4 1,4,7,10 *",
+          "pred": "0 2 4 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "the 4th of each quarter month",
+          "gold": "0 0 4 1,4,7,10 *",
+          "pred": "0,15,30,45 4 * * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "the fourth of each quarter month",
+          "gold": "0 0 4 1,4,7,10 *",
+          "pred": "0 4 * * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "4th of each quarter month",
+          "gold": "0 0 4 1,4,7,10 *",
+          "pred": "0,15,30,45 4 * * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        }
+      ]
+    },
+    "holdout": {
+      "n": 11795,
+      "well_formed_pct": 100.0,
+      "parses_pct": 100.0,
+      "fires_pct": 100.0,
+      "exact_pct": 72.12,
+      "semantic_pct": 75.58,
+      "by_bucket": {
+        "hour-range-step": {
+          "n": 1358,
+          "semantic_pct": 64.95,
+          "exact_pct": 55.82
+        },
+        "dow-range": {
+          "n": 1162,
+          "semantic_pct": 85.11,
+          "exact_pct": 83.13
+        },
+        "monthly-on-day": {
+          "n": 878,
+          "semantic_pct": 93.39,
+          "exact_pct": 93.28
+        },
+        "hour-range": {
+          "n": 858,
+          "semantic_pct": 86.6,
+          "exact_pct": 77.04
+        },
+        "monthly-on-dom-range": {
+          "n": 704,
+          "semantic_pct": 87.78,
+          "exact_pct": 84.94
+        },
+        "month-list": {
+          "n": 695,
+          "semantic_pct": 90.36,
+          "exact_pct": 90.36
+        },
+        "yearly": {
+          "n": 692,
+          "semantic_pct": 92.05,
+          "exact_pct": 91.91
+        },
+        "month-range": {
+          "n": 684,
+          "semantic_pct": 79.53,
+          "exact_pct": 78.07
+        },
+        "every-n-days": {
+          "n": 620,
+          "semantic_pct": 70.97,
+          "exact_pct": 70.97
+        },
+        "weekly-on-day": {
+          "n": 619,
+          "semantic_pct": 96.77,
+          "exact_pct": 96.77
+        },
+        "dow-list": {
+          "n": 529,
+          "semantic_pct": 94.9,
+          "exact_pct": 79.77
+        },
+        "aug-month": {
+          "n": 477,
+          "semantic_pct": 56.18,
+          "exact_pct": 45.07
+        },
+        "aug-dom-time": {
+          "n": 398,
+          "semantic_pct": 46.48,
+          "exact_pct": 46.48
+        },
+        "aug-time": {
+          "n": 372,
+          "semantic_pct": 13.71,
+          "exact_pct": 13.71
+        },
+        "monthly-on-dom-list": {
+          "n": 357,
+          "semantic_pct": 97.2,
+          "exact_pct": 97.2
+        },
+        "dow-step": {
+          "n": 177,
+          "semantic_pct": 90.4,
+          "exact_pct": 90.4
+        },
+        "aug-dom-notime": {
+          "n": 166,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "aug-step-day": {
+          "n": 159,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "aug-step-minute": {
+          "n": 155,
+          "semantic_pct": 4.52,
+          "exact_pct": 3.87
+        },
+        "aug-step-hour": {
+          "n": 128,
+          "semantic_pct": 48.44,
+          "exact_pct": 48.44
+        },
+        "weekdays-at": {
+          "n": 91,
+          "semantic_pct": 97.8,
+          "exact_pct": 87.91
+        },
+        "daily-at": {
+          "n": 90,
+          "semantic_pct": 87.78,
+          "exact_pct": 86.67
+        },
+        "weekend-at": {
+          "n": 88,
+          "semantic_pct": 98.86,
+          "exact_pct": 98.86
+        },
+        "minute-list": {
+          "n": 85,
+          "semantic_pct": 77.65,
+          "exact_pct": 77.65
+        },
+        "aug-minute-ordinal": {
+          "n": 54,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "aug-dow-abbr": {
+          "n": 52,
+          "semantic_pct": 13.46,
+          "exact_pct": 7.69
+        },
+        "every-n-hours": {
+          "n": 42,
+          "semantic_pct": 83.33,
+          "exact_pct": 80.95
+        },
+        "offset-n-minutes": {
+          "n": 29,
+          "semantic_pct": 72.41,
+          "exact_pct": 72.41
+        },
+        "aug-hour": {
+          "n": 24,
+          "semantic_pct": 100.0,
+          "exact_pct": 100.0
+        },
+        "hour-list": {
+          "n": 22,
+          "semantic_pct": 81.82,
+          "exact_pct": 81.82
+        },
+        "aug-dom-list": {
+          "n": 19,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "every-n-minutes": {
+          "n": 6,
+          "semantic_pct": 83.33,
+          "exact_pct": 83.33
+        },
+        "business-hours": {
+          "n": 3,
+          "semantic_pct": 66.67,
+          "exact_pct": 66.67
+        },
+        "every-minute": {
+          "n": 1,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        },
+        "every-hour": {
+          "n": 1,
+          "semantic_pct": 0.0,
+          "exact_pct": 0.0
+        }
+      },
+      "truncated": 0,
+      "examples": [
+        {
+          "text": "run on first of each month",
+          "gold": "0 0 1 * *",
+          "pred": "0 4 1 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on fourth of each month",
+          "gold": "0 0 4 * *",
+          "pred": "0 4 * * 1-5",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on fifth of each month",
+          "gold": "0 0 5 * *",
+          "pred": "15 3 5 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on sixth of each month",
+          "gold": "0 0 6 * *",
+          "pred": "0 6 6 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on seventh of each month",
+          "gold": "0 0 7 * *",
+          "pred": "0 7 * * 1-5",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on eighth of each month",
+          "gold": "0 0 8 * *",
+          "pred": "0 8 * * 1-5",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on ninth of each month",
+          "gold": "0 0 9 * *",
+          "pred": "0 9 * * 1-5",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on tenth of each month",
+          "gold": "0 0 10 * *",
+          "pred": "0 10 10 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on eleventh of each month",
+          "gold": "0 0 11 * *",
+          "pred": "0 11 * * 1-5",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on twelfth of each month",
+          "gold": "0 0 12 * *",
+          "pred": "0 12 2 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on thirteenth of each month",
+          "gold": "0 0 13 * *",
+          "pred": "0 1 3 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        },
+        {
+          "text": "run on fourteenth of each month",
+          "gold": "0 0 14 * *",
+          "pred": "0 1 14 * *",
+          "semantic": false,
+          "exact": false,
+          "bucket": "aug-dom-notime"
+        }
+      ]
+    }
+  },
+  "unconstrained_baseline": {
+    "n": 1000,
+    "parses_pct": 99.2,
+    "exact_pct": 36.6,
+    "semantic_pct": 37.2
+  },
+  "constrained_on_baseline_sample": {
+    "n": 1000,
+    "well_formed_pct": 100.0,
+    "exact_pct": 36.7,
+    "semantic_pct": 37.3
+  }
+}

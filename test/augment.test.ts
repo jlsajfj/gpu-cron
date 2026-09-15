@@ -46,8 +46,9 @@ describe('augment', () => {
       expect(hits.length, `no phrasings for the ${name} sense`).toBeGreaterThan(0);
     }
     // A list phrasing ("the second and sixteenth") puts 2 among the day values, not alone.
-    for (const p of senses.dom) expect(p.cron.split(' ')[2].split(',')).toContain('2');
-    for (const p of senses.minute) expect(p.cron.split(' ')[0].split(',')).toContain('2');
+    const field = (cron: string, i: number) => (cron.split(' ')[i] ?? '').split(',');
+    for (const p of senses.dom) expect(field(p.cron, 2)).toContain('2');
+    for (const p of senses.minute) expect(field(p.cron, 0)).toContain('2');
     for (const p of senses.step) expect(p.cron).toMatch(/\*\/2/);
   });
 

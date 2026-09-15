@@ -1,4 +1,4 @@
-# nl-cron
+# human-cron
 
 Natural language to cron, running entirely in your browser.
 
@@ -248,10 +248,10 @@ does not put on the default search path. `bin/py` is a two-line wrapper that set
 
 ## The browser demo
 
-`nl-cron` is an npm package with one entry point:
+`human-cron` is an npm package with one entry point:
 
 ```js
-import { parse } from 'nl-cron';
+import { parse } from 'human-cron';
 await parse('every weekday at 9am');   // { expression: '0 9 * * 1-5', next: [...] }
 ```
 

@@ -188,6 +188,8 @@ def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
                 if not (spec.min <= one <= spec.max):
                     return False, False
                 if c == "-":
+                    if one >= spec.max:
+                        return False, False
                     lo = one
                     state = "R_LO"
                 elif c == "/":
@@ -198,7 +200,7 @@ def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
                 return False, False
         elif state == "V2":
             if c == "-":
-                if not (spec.min <= one <= spec.max):
+                if not (spec.min <= one < spec.max):
                     return False, False
                 lo = one
                 state = "R_LO"
@@ -209,7 +211,7 @@ def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
             else:
                 return False, False
         elif state == "R_LO":
-            if c.isdigit() and _leading_ok(c, lo, spec.max):
+            if c.isdigit() and _leading_ok(c, lo + 1, spec.max):
                 one = int(c)
                 state = "R_HI1"
             else:
@@ -217,12 +219,12 @@ def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
         elif state == "R_HI1":
             if c.isdigit():
                 v = one * 10 + int(c)
-                if not (lo <= v <= spec.max):
+                if not (lo < v <= spec.max):
                     return False, False
                 one = v
                 state = "R_HI2"
             elif c in "/,":
-                if one < lo:
+                if one <= lo:
                     return False, False
                 state = "BEFORE_STEP" if c == "/" else "TERM_START"
             else:
@@ -262,7 +264,7 @@ def field_state(s: str, spec: FieldSpec) -> tuple[bool, bool]:
     elif state == "R_LO":
         syntactic = (True, False)
     elif state == "R_HI1":
-        syntactic = (True, one >= lo)
+        syntactic = (True, one > lo)
     elif state == "BEFORE_STEP":
         syntactic = (True, False)
     else:  # AFTER_STAR / V2 / R_HI2 / ST1 / ST2

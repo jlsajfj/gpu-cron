@@ -1,5 +1,5 @@
 {
-  "name": "nl-cron",
+  "name": "human-cron",
   "version": "0.1.0",
   "description": "Natural language to cron, decoded through a cron-grammar automaton so the output is valid by construction",
   "type": "module",
@@ -32,12 +32,12 @@
   },
   "keywords": [
     "cron",
-    "crontab",
-    "schedule",
+    "natural-language",
+    "scheduling",
+    "transformer",
     "webgpu",
-    "wgsl",
-    "transformers",
-    "on-device"
+    "constrained-decoding",
+    "onnx"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -47,5 +47,9 @@
     "esbuild": "^0.25.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlsajfj/human-cron.git"
   }
 }

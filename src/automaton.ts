@@ -207,6 +207,7 @@ function fieldStateUncached(s: string, spec: FieldSpec): FieldState {
       } else if (c === '-' || c === '/' || c === ',') {
         if (!(spec.min <= one && one <= spec.max)) return { isPrefix: false, canEnd: false };
         if (c === '-') {
+          if (one >= spec.max) return { isPrefix: false, canEnd: false };
           lo = one;
           state = 'R_LO';
         } else if (c === '/') {
@@ -219,7 +220,7 @@ function fieldStateUncached(s: string, spec: FieldSpec): FieldState {
       }
     } else if (state === 'V2') {
       if (c === '-') {
-        if (!(spec.min <= one && one <= spec.max)) return { isPrefix: false, canEnd: false };
+        if (!(spec.min <= one && one < spec.max)) return { isPrefix: false, canEnd: false };
         lo = one;
         state = 'R_LO';
       } else if (c === '/') {
@@ -230,7 +231,7 @@ function fieldStateUncached(s: string, spec: FieldSpec): FieldState {
         return { isPrefix: false, canEnd: false };
       }
     } else if (state === 'R_LO') {
-      if (isDigit(c) && leadingOk(c, lo, spec.max)) {
+      if (isDigit(c) && leadingOk(c, lo + 1, spec.max)) {
         one = Number(c);
         state = 'R_HI1';
       } else {
@@ -239,11 +240,11 @@ function fieldStateUncached(s: string, spec: FieldSpec): FieldState {
     } else if (state === 'R_HI1') {
       if (isDigit(c)) {
         const v = one * 10 + Number(c);
-        if (!(lo <= v && v <= spec.max)) return { isPrefix: false, canEnd: false };
+        if (!(lo < v && v <= spec.max)) return { isPrefix: false, canEnd: false };
         one = v;
         state = 'R_HI2';
       } else if (c === '/' || c === ',') {
-        if (one < lo) return { isPrefix: false, canEnd: false };
+        if (one <= lo) return { isPrefix: false, canEnd: false };
         state = c === '/' ? 'BEFORE_STEP' : 'TERM_START';
       } else {
         return { isPrefix: false, canEnd: false };
@@ -285,7 +286,7 @@ function fieldStateUncached(s: string, spec: FieldSpec): FieldState {
   if (state === 'TERM_START') syntactic = [s.length > 0, false];
   else if (state === 'V1') syntactic = [true, spec.min <= one && one <= spec.max];
   else if (state === 'R_LO') syntactic = [true, false];
-  else if (state === 'R_HI1') syntactic = [true, one >= lo];
+  else if (state === 'R_HI1') syntactic = [true, one > lo];
   else if (state === 'BEFORE_STEP') syntactic = [true, false];
   else syntactic = [true, true];
 

@@ -24,7 +24,7 @@ weights/*.onnx
 # Run logs kept at the repo root during runs (training and eval)
 runs_*.log
 eval_*.log
-test/gpu-bundle.js
+test/gpu-bundle.js*
 
 # Superseded: the demo reads the raw export, not an ONNX graph
 weights/*.onnx
