@@ -1,5 +1,5 @@
 {
-  "name": "human-cron",
+  "name": "gpu-cron",
   "version": "0.1.0",
   "description": "Natural language to cron, decoded through a cron-grammar automaton so the output is valid by construction",
   "type": "module",
@@ -50,6 +50,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jlsajfj/human-cron.git"
+    "url": "git+https://github.com/jlsajfj/gpu-cron.git"
   }
 }

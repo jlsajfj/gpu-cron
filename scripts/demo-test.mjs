@@ -121,7 +121,7 @@ async function run() {
   const server = await serve(DEMO_DIST);
   const base = `http://127.0.0.1:${server.address().port}`;
   const devtoolsPort = await freePort();
-  const profile = await mkdtemp(join(tmpdir(), 'human-cron-demo-'));
+  const profile = await mkdtemp(join(tmpdir(), 'gpu-cron-demo-'));
   const url = `${base}/index.html`;
 
   const child = spawn(

@@ -145,8 +145,8 @@ function applyTheme(theme: string | null): void {
   if (theme === null) delete document.documentElement.dataset.theme;
   else document.documentElement.dataset.theme = theme;
   try {
-    if (theme === null) localStorage.removeItem('human-cron-theme');
-    else localStorage.setItem('human-cron-theme', theme);
+    if (theme === null) localStorage.removeItem('gpu-cron-theme');
+    else localStorage.setItem('gpu-cron-theme', theme);
   } catch {
     // storage can be unavailable in a private window; the toggle still works for this page
   }
@@ -155,7 +155,7 @@ function applyTheme(theme: string | null): void {
 function initTheme(): void {
   let stored: string | null = null;
   try {
-    stored = localStorage.getItem('human-cron-theme');
+    stored = localStorage.getItem('gpu-cron-theme');
   } catch {
     stored = null;
   }

@@ -136,7 +136,7 @@ export async function parse(text: string, options: ParseOptions = {}): Promise<C
     // Not a parse outcome and not something a caller can act on — if it fires, this package
     // is broken, so it is an invariant failure rather than a branchable error class.
     throw new CronError(
-      `human-cron invariant violated on ${JSON.stringify(text)} — this is a bug, please report it`,
+      `gpu-cron invariant violated on ${JSON.stringify(text)} — this is a bug, please report it`,
     );
   }
 

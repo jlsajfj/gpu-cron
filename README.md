@@ -1,4 +1,4 @@
-# human-cron
+# gpu-cron
 
 Natural language to cron, running entirely in your browser.
 
@@ -10,31 +10,34 @@ Natural language to cron, running entirely in your browser.
 
 ## Why
 
-Cron is write-only. Nobody remembers which field is day-of-month and which is day-of-week,
-so people paste a description into a web tool — which means sending your schedule to
-someone else's server to get eleven characters back.
+**1. It looked fun.** Shu Ding's [gpu-lexer](https://gpu-lexer.vercel.app) (Vercel Labs)
+trains a small model to do syntax highlighting in the browser on WebGPU — 27.5 KB, no
+server, language-agnostic, and openly "experimental and built for learning". This is the
+same shape pointed at a different problem. If a tiny model can guess syntax, it can
+probably write cron.
 
-This runs locally. The whole thing is **89 KB of JavaScript** with the model inlined: no
-network call, no API key, no inference runtime to download, nothing to keep running.
+**2. It is actually useful.** Cron is write-only. Nobody remembers which field is
+day-of-month and which is day-of-week, so people paste a description into a web tool —
+which means sending your schedule to someone else's server to get eleven characters back.
+This runs locally: **89 KB of JavaScript** with the model inlined, no network call, no API
+key, no inference runtime to download, nothing to keep running.
 
 It fits in 89 KB because the model never has to learn cron *syntax*. A grammar automaton
 masks the decoder at every step, so an invalid expression is unreachable rather than
 unlikely — validity is a property of the decoder, not a score the model has to earn. That
-leaves the model with one job, deciding which numbers go where, and that turns out to be a
+leaves the model one job, deciding which numbers go where, and that turns out to be a
 **45,376 parameter** problem.
 
-The second reason it exists is to find out how small "small" can be while the answer is
-still useful. The [Results](#results) and [Limitations](#limitations) are honest about
-where that lands.
+The [Results](#results) and [Limitations](#limitations) are honest about where that lands.
 
 ## Install
 
 ```bash
-npm install human-cron
+npm install gpu-cron
 ```
 
 ```js
-import { isAvailable, parse } from 'human-cron';
+import { isAvailable, parse } from 'gpu-cron';
 
 if (await isAvailable()) {
   await parse('every weekday at 9am');
@@ -87,7 +90,7 @@ function Parser() {
 ```svelte
 <!-- Svelte: {#await} is the same idea, and will not restart on re-render -->
 <script>
-  import { isAvailable, parse } from 'human-cron';
+  import { isAvailable, parse } from 'gpu-cron';
   const ready = isAvailable();
 </script>
 
