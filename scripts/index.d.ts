@@ -23,30 +23,8 @@ export interface Backend {
   bytes: number;
 }
 
-/**
- * Base class for every failure this package raises. Branch with `instanceof` on the
- * subclasses rather than matching on strings.
- */
+/** Anything that stops parse() from answering. */
 export declare class CronError extends Error {}
-
-/**
- * No WebGPU adapter here. Not recoverable: there is no CPU fallback, and this is what
- * importing the package in Node gives you.
- */
-export declare class NoWebGpuError extends CronError {}
-
-/** The build has no weights inlined. A packaging bug, not a runtime one. */
-export declare class NoModelError extends CronError {}
-
-/** WebGPU is present, but the pipeline would not load or a run threw. */
-export declare class InferenceFailedError extends CronError {}
-
-/**
- * The prompt does not fit in the model's context alongside the answer it must produce.
- * Input-specific and recoverable: shorten the text. Nothing is truncated on your behalf,
- * since a silently clipped prompt decodes to a schedule nobody asked for.
- */
-export declare class InputTooLongError extends CronError {}
 
 /**
  * Whether this environment can run the model.
@@ -71,15 +49,6 @@ export declare function isAvailable(): Promise<boolean>;
  * Throws {@link CronError}; branch on its `reason`.
  */
 export declare function parse(text: string, options?: ParseOptions): Promise<CronMatch>;
-
-/**
- * The error explaining why the model is unavailable, or null if it is available or nothing
- * has checked yet. The same instance parse() would throw, without having to catch.
- *
- * isAvailable() tells you whether to disable your input; this tells you what to say.
- * Latched, so it is safe to read during render.
- */
-export declare function unavailable(): CronError | null;
 
 /** Which backend the model loaded on. Null until isAvailable() or parse() has loaded it. */
 export declare function backend(): Backend | null;

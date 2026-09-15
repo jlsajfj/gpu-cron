@@ -46,7 +46,8 @@ makes the first `parse()` fast rather than doing the upload twice. Repeat calls 
 
 ```js
 if (!(await isAvailable())) {
-  showPlainCronInput();   // fall back to a text field
+  input.disabled = true;
+  input.title = 'GPU not available';
   return;
 }
 ```
@@ -70,44 +71,18 @@ confident, valid, meaningless expression. Show the user what you parsed.
 
 Throws `CronError` on failure.
 
-### `unavailable(): CronError | null`
+### `CronError`
 
-The error explaining why the model is unavailable, or `null` if it is available. This is
-the **same instance** `parse()` would throw, handed to you without having to call `parse()`
-and catch — so a tooltip can never disagree with an error toast.
+The only error class. `parse()` throws it when the environment cannot run the model — in
+practice, no WebGPU — or when the prompt does not fit alongside the answer.
 
-Latched: once the runtime fails it stays failed, so it is safe to read during render.
+There is no "could not parse" error, because there is no such outcome. Constrained decoding
+means every input produces a valid expression, including gibberish, which produces a valid
+and meaningless one. Judging whether the answer is *right* is the caller's job, and the
+reason to show the user what you parsed.
 
-```js
-if (!(await isAvailable())) {
-  const err = unavailable();
-  input.disabled = true;
-  input.title = err instanceof NoWebGpuError ? 'GPU not available' : 'Unavailable';
-}
-```
-
-### Errors
-
-Branch with `instanceof`, not on strings. Everything descends from `CronError`.
-
-| class | meaning | recoverable? |
-|---|---|---|
-| `NoWebGpuError` | no WebGPU adapter — this is what Node gets | no |
-| `NoModelError` | the build has no weights inlined; a packaging bug | no |
-| `InferenceFailedError` | WebGPU present, but the pipeline would not load or a run threw | no |
-| `InputTooLongError` | the prompt does not fit alongside the answer | **yes** — shorten the input |
-
-The first three latch and are what `unavailable()` returns: disable your UI on those.
-`InputTooLongError` is per-input, so show an inline message and leave the field enabled.
-
-**There is no "could not parse" error, because there is no such outcome.** Constrained
-decoding means every input produces a valid expression — including gibberish, which
-produces a valid and meaningless one. `parse()` throws only when the environment cannot
-run the model or the prompt does not fit. Judging whether the answer is *right* is the
-caller's job, and the reason to show the user what you parsed.
-
-**Nothing is truncated on your behalf.** An over-long prompt is a hard error, because a
-silently clipped prompt decodes to a schedule nobody asked for.
+Nothing is truncated on your behalf: an over-long prompt throws, because a silently clipped
+prompt decodes to a schedule nobody asked for.
 
 ### `backend(): Backend | null`
 

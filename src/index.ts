@@ -6,7 +6,7 @@ import { defaultAutomaton, isWellFormed } from './automaton.js';
 import { PROMPT_OVERHEAD } from './tokenizer.js';
 import { nextFireTimes } from './cron.js';
 import { decode } from './decode.js';
-import { type FailureReason, latchedFailure, loadRuntime } from './runtime.js';
+import { loadRuntime } from './runtime.js';
 
 export interface CronMatch {
   /** Always valid cron: the decoder cannot emit a token the grammar rejects. */
@@ -20,47 +20,10 @@ export interface ParseOptions {
   count?: number;
 }
 
-/**
- * Base class for every failure this package raises. Branch with `instanceof` on the
- * subclasses below rather than matching on strings.
- */
+/** Anything that stops parse() from answering. */
 export class CronError extends Error {
   override name = 'CronError';
 }
-
-/**
- * This environment has no WebGPU adapter. Not recoverable: there is no CPU fallback, and
- * this is what importing the package in Node gives you.
- */
-export class NoWebGpuError extends CronError {
-  override name = 'NoWebGpuError';
-}
-
-/** The build has no weights inlined. A packaging bug, not a runtime one. */
-export class NoModelError extends CronError {
-  override name = 'NoModelError';
-}
-
-/** WebGPU is present, but the pipeline would not load or a run threw. */
-export class InferenceFailedError extends CronError {
-  override name = 'InferenceFailedError';
-}
-
-/**
- * The prompt does not fit in the model's context alongside the answer it has to produce.
- *
- * Input-specific and recoverable: shorten the text. Nothing is truncated on your behalf —
- * a silently clipped prompt would decode to a schedule you never asked for.
- */
-export class InputTooLongError extends CronError {
-  override name = 'InputTooLongError';
-}
-
-const BY_REASON: Record<FailureReason, new (message: string) => CronError> = {
-  'no-webgpu': NoWebGpuError,
-  'no-model': NoModelError,
-  'inference-failed': InferenceFailedError,
-};
 
 export interface Backend {
   /** GPU adapter description, e.g. "Apple M2 Pro". */
@@ -74,8 +37,6 @@ export interface Backend {
 let ready: ReturnType<typeof loadRuntime> | null = null;
 let resolved: Backend | null = null;
 let availability: Promise<boolean> | null = null;
-// One instance per process: identity is stable, so `unavailable() === caught` holds.
-let cachedFailure: CronError | null = null;
 
 // Both entry points share one load, so calling isAvailable() first makes parse() warm
 // instead of doing the GPU upload twice.
@@ -130,32 +91,6 @@ export function isAvailable(): Promise<boolean> {
 }
 
 /**
- * The error explaining why the model is unavailable, or `null` if it is available or
- * nothing has checked yet.
- *
- * This is the same error `parse()` would throw, handed to you without having to call
- * `parse()` and catch. `isAvailable()` tells you *whether* to disable your input; this
- * tells you *what to say*:
- *
- * ```js
- * if (!(await isAvailable())) {
- *   const err = unavailable();
- *   input.disabled = true;
- *   input.title = err instanceof NoWebGpuError ? 'GPU not available' : 'Unavailable';
- * }
- * ```
- *
- * Latched: once the runtime fails it stays failed, so this never changes underneath you
- * and is safe to read during render.
- */
-export function unavailable(): CronError | null {
-  const failure = latchedFailure();
-  if (failure === null) return null;
-  cachedFailure ??= new BY_REASON[failure.reason](failure.message);
-  return cachedFailure;
-}
-
-/**
  * Which backend the model loaded on, or `null` before anything has loaded it.
  *
  * Populated by the first successful `isAvailable()` or `parse()`. Diagnostics only.
@@ -186,11 +121,11 @@ export function backend(): Backend | null {
  */
 export async function parse(text: string, options: ParseOptions = {}): Promise<CronMatch> {
   const runtime = await load();
-  if (!runtime.ok) throw unavailable() ?? new CronError(runtime.message);
+  if (!runtime.ok) throw new CronError(runtime.message);
 
   const budget = runtime.runtime.maxLen - PROMPT_OVERHEAD - defaultAutomaton().grammar.maxLength - 1;
   if (text.length > budget) {
-    throw new InputTooLongError(
+    throw new CronError(
       `prompt is ${text.length} characters; the model fits ${budget} alongside its answer`,
     );
   }

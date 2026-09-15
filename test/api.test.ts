@@ -25,26 +25,7 @@ describe('public API', () => {
     expect(api.isAvailable()).toBe(first);
   });
 
-  it('parse rejects with a typed error you can branch on', async () => {
-    await expect(api.parse('every day at 9am')).rejects.toBeInstanceOf(api.NoWebGpuError);
+  it('parse rejects with a CronError when there is no backend', async () => {
     await expect(api.parse('every day at 9am')).rejects.toBeInstanceOf(api.CronError);
-  });
-
-  // The pre-check and the throw must agree, or a tooltip could disagree with an error toast.
-  it('hands back the same error instance parse throws', async () => {
-    await api.isAvailable();
-    const caught = await api.parse('every day at 9am').catch((e) => e);
-    expect(api.unavailable()).toBe(caught);
-  });
-
-  it('every failure class descends from CronError', () => {
-    for (const cls of [
-      api.NoWebGpuError,
-      api.NoModelError,
-      api.InferenceFailedError,
-      api.InputTooLongError,
-    ]) {
-      expect(Object.create(cls.prototype)).toBeInstanceOf(api.CronError);
-    }
   });
 });
