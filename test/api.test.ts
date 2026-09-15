@@ -16,16 +16,30 @@ describe('public API', () => {
     await expect(api.isAvailable()).resolves.toBe(false);
   });
 
-  it('parse rejects with a branchable reason when there is no backend', async () => {
-    await expect(api.parse('every day at 9am')).rejects.toMatchObject({
-      name: 'CronError',
-      reason: 'no-webgpu',
-    });
+  // React's use() and Suspense caches key on promise identity; a fresh promise per render
+  // suspends forever. This is a load-bearing property of the API, not an implementation detail.
+  it('returns the same promise object every call', async () => {
+    const first = api.isAvailable();
+    expect(api.isAvailable()).toBe(first);
+    await first;
+    expect(api.isAvailable()).toBe(first);
   });
 
-  it('declares every reason the runtime can latch', () => {
-    for (const reason of ['no-webgpu', 'no-model', 'inference-failed', 'ungrammatical']) {
-      expect(dts).toContain(`'${reason}'`);
+  it('parse rejects with a typed error you can branch on', async () => {
+    await expect(api.parse('every day at 9am')).rejects.toBeInstanceOf(api.NoWebGpuError);
+    await expect(api.parse('every day at 9am')).rejects.toBeInstanceOf(api.CronError);
+  });
+
+  // The pre-check and the throw must agree, or a tooltip could disagree with an error toast.
+  it('hands back the same error instance parse throws', async () => {
+    await api.isAvailable();
+    const caught = await api.parse('every day at 9am').catch((e) => e);
+    expect(api.unavailable()).toBe(caught);
+  });
+
+  it('every failure class descends from CronError', () => {
+    for (const cls of [api.NoWebGpuError, api.NoModelError, api.InferenceFailedError, api.UngrammaticalError]) {
+      expect(Object.create(cls.prototype)).toBeInstanceOf(api.CronError);
     }
   });
 });

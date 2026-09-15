@@ -5,9 +5,7 @@
 import { defaultAutomaton, isWellFormed } from './automaton.js';
 import { nextFireTimes } from './cron.js';
 import { decode } from './decode.js';
-import { type FailureReason, loadRuntime } from './runtime.js';
-
-export type { FailureReason };
+import { type FailureReason, latchedFailure, loadRuntime } from './runtime.js';
 
 export interface CronMatch {
   /** Always valid cron: the decoder cannot emit a token the grammar rejects. */
@@ -22,26 +20,44 @@ export interface ParseOptions {
 }
 
 /**
- * Why a call failed, for callers that want to branch instead of showing `error.message`.
- *
- * - `no-webgpu` — this environment has no WebGPU adapter. Not recoverable; there is no
- *   CPU fallback. This is what you get for importing the package in Node.
- * - `no-model` — the build has no weights inlined. A packaging bug, not a runtime one.
- * - `inference-failed` — WebGPU is present but the pipeline would not load or a run threw.
- * - `ungrammatical` — the model could not finish a legal expression within the length cap.
- *   Input-specific: a different phrasing may well work.
+ * Base class for every failure this package raises. Branch with `instanceof` on the
+ * subclasses below rather than matching on strings.
  */
-export type CronErrorReason = FailureReason | 'ungrammatical';
-
 export class CronError extends Error {
   override name = 'CronError';
-  readonly reason: CronErrorReason;
-
-  constructor(message: string, reason: CronErrorReason) {
-    super(message);
-    this.reason = reason;
-  }
 }
+
+/**
+ * This environment has no WebGPU adapter. Not recoverable: there is no CPU fallback, and
+ * this is what importing the package in Node gives you.
+ */
+export class NoWebGpuError extends CronError {
+  override name = 'NoWebGpuError';
+}
+
+/** The build has no weights inlined. A packaging bug, not a runtime one. */
+export class NoModelError extends CronError {
+  override name = 'NoModelError';
+}
+
+/** WebGPU is present, but the pipeline would not load or a run threw. */
+export class InferenceFailedError extends CronError {
+  override name = 'InferenceFailedError';
+}
+
+/**
+ * The model could not finish a legal expression within the length cap. Unlike the others
+ * this is input-specific and worth retrying: a different phrasing may well work.
+ */
+export class UngrammaticalError extends CronError {
+  override name = 'UngrammaticalError';
+}
+
+const BY_REASON: Record<FailureReason, new (message: string) => CronError> = {
+  'no-webgpu': NoWebGpuError,
+  'no-model': NoModelError,
+  'inference-failed': InferenceFailedError,
+};
 
 export interface Backend {
   /** GPU adapter description, e.g. "Apple M2 Pro". */
@@ -54,6 +70,9 @@ export interface Backend {
 
 let ready: ReturnType<typeof loadRuntime> | null = null;
 let resolved: Backend | null = null;
+let availability: Promise<boolean> | null = null;
+// One instance per process: identity is stable, so `unavailable() === caught` holds.
+let cachedFailure: CronError | null = null;
 
 // Both entry points share one load, so calling isAvailable() first makes parse() warm
 // instead of doing the GPU upload twice.
@@ -88,9 +107,49 @@ async function load() {
  * first `parse()` fast rather than doing the work twice. Repeat calls are free.
  *
  * If you need to know *why* it is unavailable, call `parse()` and read `error.reason`.
+ *
+ * The same promise object is returned every call, so it works directly with React's
+ * `use()` and with Suspense caches that key on identity:
+ *
+ * ```jsx
+ * function Parser() {
+ *   if (!use(isAvailable())) return <PlainCronInput />;
+ *   return <ModelInput />;
+ * }
+ * ```
  */
-export async function isAvailable(): Promise<boolean> {
-  return (await load()).ok;
+export function isAvailable(): Promise<boolean> {
+  // Deliberately not `async`: every call must return the SAME promise object. React's
+  // `use()` and every Suspense cache key on promise identity, and a fresh promise per
+  // render suspends forever.
+  availability ??= load().then((result) => result.ok);
+  return availability;
+}
+
+/**
+ * The error explaining why the model is unavailable, or `null` if it is available or
+ * nothing has checked yet.
+ *
+ * This is the same error `parse()` would throw, handed to you without having to call
+ * `parse()` and catch. `isAvailable()` tells you *whether* to disable your input; this
+ * tells you *what to say*:
+ *
+ * ```js
+ * if (!(await isAvailable())) {
+ *   const err = unavailable();
+ *   input.disabled = true;
+ *   input.title = err instanceof NoWebGpuError ? 'GPU not available' : 'Unavailable';
+ * }
+ * ```
+ *
+ * Latched: once the runtime fails it stays failed, so this never changes underneath you
+ * and is safe to read during render.
+ */
+export function unavailable(): CronError | null {
+  const failure = latchedFailure();
+  if (failure === null) return null;
+  cachedFailure ??= new BY_REASON[failure.reason](failure.message);
+  return cachedFailure;
 }
 
 /**
@@ -124,14 +183,11 @@ export function backend(): Backend | null {
  */
 export async function parse(text: string, options: ParseOptions = {}): Promise<CronMatch> {
   const runtime = await load();
-  if (!runtime.ok) throw new CronError(runtime.message, runtime.reason);
+  if (!runtime.ok) throw unavailable() ?? new CronError(runtime.message);
 
   const decoded = await decode(text, runtime.runtime.logits, { automaton: defaultAutomaton() });
   if (decoded.truncated || !isWellFormed(decoded.text)) {
-    throw new CronError(
-      `could not finish ${JSON.stringify(text)} within the grammar`,
-      'ungrammatical',
-    );
+    throw new UngrammaticalError(`could not finish ${JSON.stringify(text)} within the grammar`);
   }
 
   return {

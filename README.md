@@ -70,19 +70,36 @@ confident, valid, meaningless expression. Show the user what you parsed.
 
 Throws `CronError` on failure.
 
-### `CronError`
+### `unavailable(): CronError | null`
 
-Extends `Error` with a `reason` field, for branching without string-matching `message`:
+The error explaining why the model is unavailable, or `null` if it is available. This is
+the **same instance** `parse()` would throw, handed to you without having to call `parse()`
+and catch — so a tooltip can never disagree with an error toast.
 
-| `reason` | meaning | recoverable? |
+Latched: once the runtime fails it stays failed, so it is safe to read during render.
+
+```js
+if (!(await isAvailable())) {
+  const err = unavailable();
+  input.disabled = true;
+  input.title = err instanceof NoWebGpuError ? 'GPU not available' : 'Unavailable';
+}
+```
+
+### Errors
+
+Branch with `instanceof`, not on strings. Everything descends from `CronError`.
+
+| class | meaning | recoverable? |
 |---|---|---|
-| `no-webgpu` | no WebGPU adapter — this is what Node gets | no |
-| `no-model` | the build has no weights inlined; a packaging bug | no |
-| `inference-failed` | WebGPU present, but the pipeline would not load or a run threw | no |
-| `ungrammatical` | the model could not finish a legal expression within the length cap | yes — try a different phrasing |
+| `NoWebGpuError` | no WebGPU adapter — this is what Node gets | no |
+| `NoModelError` | the build has no weights inlined; a packaging bug | no |
+| `InferenceFailedError` | WebGPU present, but the pipeline would not load or a run threw | no |
+| `UngrammaticalError` | the model could not finish a legal expression within the length cap | **yes** — try a different phrasing |
 
-The first three latch: once the runtime fails, every later call returns the same failure
-rather than retrying a broken device.
+The first three latch and are what `unavailable()` returns. Only `UngrammaticalError` is
+per-input, and it is the only one worth retrying — so disable your UI on the others, and
+show an inline message for that one.
 
 ### `backend(): Backend | null`
 

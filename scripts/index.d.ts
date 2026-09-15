@@ -24,20 +24,28 @@ export interface Backend {
 }
 
 /**
- * Why a call failed.
- *
- * - `no-webgpu` — no WebGPU adapter here. Not recoverable; there is no CPU fallback, and
- *   this is what importing the package in Node gives you.
- * - `no-model` — the build has no weights inlined. A packaging bug.
- * - `inference-failed` — WebGPU is present but the pipeline would not load, or a run threw.
- * - `ungrammatical` — the model could not finish a legal expression within the length cap.
- *   Input-specific: another phrasing may work.
+ * Base class for every failure this package raises. Branch with `instanceof` on the
+ * subclasses rather than matching on strings.
  */
-export type CronErrorReason = 'no-webgpu' | 'no-model' | 'inference-failed' | 'ungrammatical';
+export declare class CronError extends Error {}
 
-export declare class CronError extends Error {
-  readonly reason: CronErrorReason;
-}
+/**
+ * No WebGPU adapter here. Not recoverable: there is no CPU fallback, and this is what
+ * importing the package in Node gives you.
+ */
+export declare class NoWebGpuError extends CronError {}
+
+/** The build has no weights inlined. A packaging bug, not a runtime one. */
+export declare class NoModelError extends CronError {}
+
+/** WebGPU is present, but the pipeline would not load or a run threw. */
+export declare class InferenceFailedError extends CronError {}
+
+/**
+ * The model could not finish a legal expression within the length cap. Unlike the others
+ * this is input-specific and worth retrying: a different phrasing may work.
+ */
+export declare class UngrammaticalError extends CronError {}
 
 /**
  * Whether this environment can run the model.
@@ -47,6 +55,9 @@ export declare class CronError extends Error {
  *
  * The first call uploads the weights to the GPU. That work is shared with `parse()`, so
  * calling this first makes the first `parse()` warm instead of paying for the upload twice.
+ *
+ * Returns the same promise object every call, so it can be handed straight to React's
+ * `use()` or any Suspense cache that keys on promise identity.
  */
 export declare function isAvailable(): Promise<boolean>;
 
@@ -59,6 +70,15 @@ export declare function isAvailable(): Promise<boolean>;
  * Throws {@link CronError}; branch on its `reason`.
  */
 export declare function parse(text: string, options?: ParseOptions): Promise<CronMatch>;
+
+/**
+ * The error explaining why the model is unavailable, or null if it is available or nothing
+ * has checked yet. The same instance parse() would throw, without having to catch.
+ *
+ * isAvailable() tells you whether to disable your input; this tells you what to say.
+ * Latched, so it is safe to read during render.
+ */
+export declare function unavailable(): CronError | null;
 
 /** Which backend the model loaded on. Null until isAvailable() or parse() has loaded it. */
 export declare function backend(): Backend | null;

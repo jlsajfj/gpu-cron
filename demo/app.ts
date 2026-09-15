@@ -1,7 +1,16 @@
 // The demo is a consumer of the published package: it imports the same entry point an npm
 // user would and renders whatever parse() returns. Nothing here reaches into the internals.
 
-import { CronError, backend, parse, type CronMatch } from '../src/index.js';
+import {
+  CronError,
+  NoModelError,
+  NoWebGpuError,
+  backend,
+  isAvailable,
+  parse,
+  unavailable,
+  type CronMatch,
+} from '../src/index.js';
 
 const EXAMPLES = [
   'every weekday at 9am',
@@ -167,6 +176,25 @@ function initTheme(): void {
   });
 }
 
+function tooltipFor(error: CronError | null): string {
+  if (error instanceof NoWebGpuError) return 'GPU not available';
+  if (error instanceof NoModelError) return 'No model in this build';
+  return 'Schedule parsing is unavailable';
+}
+
+async function gateOnBackend(): Promise<boolean> {
+  if (await isAvailable()) return true;
+  const tip = tooltipFor(unavailable());
+  input.disabled = true;
+  input.title = tip;
+  input.placeholder = tip;
+  for (const el of document.querySelectorAll<HTMLButtonElement>('form button, .examples button')) {
+    el.disabled = true;
+    el.title = tip;
+  }
+  return false;
+}
+
 function boot(): void {
   buildExamples();
   initTheme();
@@ -181,7 +209,9 @@ function boot(): void {
   const deepLink = new URLSearchParams(location.search).get('q');
   if (deepLink !== null && deepLink.trim() !== '') input.value = deepLink;
   if (input.value.trim() === '') input.value = EXAMPLES[0] as string;
-  void run(input.value);
+  void gateOnBackend().then((ok) => {
+    if (ok) void run(input.value);
+  });
 }
 
 boot();
