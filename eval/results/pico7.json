@@ -8,8 +8,8 @@
       "well_formed_pct": 100.0,
       "parses_pct": 100.0,
       "fires_pct": 100.0,
-      "exact_pct": 83.99,
-      "semantic_pct": 86.5,
+      "exact_pct": 84.0,
+      "semantic_pct": 86.52,
       "by_bucket": {
         "hour-range-step": {
           "n": 1012,
@@ -28,8 +28,8 @@
         },
         "month-range": {
           "n": 620,
-          "semantic_pct": 69.52,
-          "exact_pct": 68.55
+          "semantic_pct": 69.68,
+          "exact_pct": 68.71
         },
         "aug-dom-time": {
           "n": 592,
@@ -53,7 +53,7 @@
         },
         "monthly-on-dom-range": {
           "n": 469,
-          "semantic_pct": 80.6,
+          "semantic_pct": 80.81,
           "exact_pct": 76.76
         },
         "hour-range": {
@@ -262,13 +262,13 @@
       "well_formed_pct": 100.0,
       "parses_pct": 100.0,
       "fires_pct": 100.0,
-      "exact_pct": 79.74,
-      "semantic_pct": 82.87,
+      "exact_pct": 79.75,
+      "semantic_pct": 82.83,
       "by_bucket": {
         "hour-range-step": {
           "n": 1358,
-          "semantic_pct": 62.22,
-          "exact_pct": 52.5
+          "semantic_pct": 62.3,
+          "exact_pct": 52.58
         },
         "dow-range": {
           "n": 1162,
@@ -277,13 +277,13 @@
         },
         "monthly-on-day": {
           "n": 878,
-          "semantic_pct": 93.05,
+          "semantic_pct": 92.94,
           "exact_pct": 92.48
         },
         "hour-range": {
           "n": 858,
-          "semantic_pct": 80.3,
-          "exact_pct": 69.93
+          "semantic_pct": 80.54,
+          "exact_pct": 70.05
         },
         "monthly-on-dom-range": {
           "n": 704,
@@ -297,7 +297,7 @@
         },
         "yearly": {
           "n": 692,
-          "semantic_pct": 86.71,
+          "semantic_pct": 86.56,
           "exact_pct": 86.56
         },
         "month-range": {
@@ -322,7 +322,7 @@
         },
         "aug-month": {
           "n": 477,
-          "semantic_pct": 88.26,
+          "semantic_pct": 87.21,
           "exact_pct": 87.0
         },
         "aug-dom-time": {
