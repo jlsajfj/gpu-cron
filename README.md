@@ -8,6 +8,8 @@ Natural language to cron, running entirely in your browser.
 "every second hour"            ->  0 */2 * * *
 ```
 
+https://github.com/user-attachments/assets/ade519dc-9833-4a89-a9d9-1e25a04c821c
+
 ## Why
 
 **1. It looked fun.** Shu Ding's [gpu-lexer](https://gpu-lexer.vercel.app) (Vercel Labs)
