@@ -34,13 +34,21 @@ describe('augment', () => {
     expect(all.filter((p) => /\bseconds\b|\b\d+\s*seconds?\b/i.test(p.text))).toEqual([]);
   });
 
-  it('teaches "second" as an ordinal and as a step, with distinct labels', () => {
-    const ordinal = all.filter((p) => /\bthe second\b/i.test(p.text));
-    const step = all.filter((p) => /\bevery second\b/i.test(p.text));
-    expect(ordinal.length).toBeGreaterThan(0);
-    expect(step.length).toBeGreaterThan(0);
-    for (const p of ordinal) expect(p.cron.split(' ')[2]).toBe('2');
-    for (const p of step) expect(p.cron).toMatch(/\*\/2/);
+  // "second" carries three senses and each must reach the model with its own label:
+  // the day-of-month ordinal, the minute ordinal, and the step.
+  it('teaches every sense of "second" with a distinct label', () => {
+    const senses = {
+      dom: all.filter((p) => /\bthe second\b/i.test(p.text) && !/minute/i.test(p.text)),
+      minute: all.filter((p) => /\bthe second minute\b/i.test(p.text)),
+      step: all.filter((p) => /\bevery second\b/i.test(p.text)),
+    };
+    for (const [name, hits] of Object.entries(senses)) {
+      expect(hits.length, `no phrasings for the ${name} sense`).toBeGreaterThan(0);
+    }
+    // A list phrasing ("the second and sixteenth") puts 2 among the day values, not alone.
+    for (const p of senses.dom) expect(p.cron.split(' ')[2].split(',')).toContain('2');
+    for (const p of senses.minute) expect(p.cron.split(' ')[0].split(',')).toContain('2');
+    for (const p of senses.step) expect(p.cron).toMatch(/\*\/2/);
   });
 
   // The model was copying the day digit into the hour ("15th of the month" -> "0 15 15 * *");
@@ -54,6 +62,25 @@ describe('augment', () => {
       seen.add(Number(dom));
     }
     expect([...seen].sort((a, b) => a - b)).toEqual(Array.from({ length: 31 }, (_, i) => i + 1));
+  });
+
+  // The sampler only ever emitted {0,15,30,45}; 53 of 60 minute values were absent and the
+  // model snapped arbitrary minutes to the nearest tidy one.
+  it('covers every minute value', () => {
+    const minutes = new Set<number>();
+    for (const r of rows.filter((x) => x.bucket === 'aug-time')) {
+      const m = Number(r.cron.split(' ')[0]);
+      if (Number.isInteger(m)) minutes.add(m);
+    }
+    expect(minutes.size).toBe(60);
+  });
+
+  it('teaches the fraction words', () => {
+    for (const [phrase, minute] of [['quarter past', 15], ['half past', 30], ['quarter to', 45]] as const) {
+      const hits = all.filter((p) => p.text.includes(phrase));
+      expect(hits.length).toBeGreaterThan(0);
+      for (const h of hits) expect(Number(h.cron.split(' ')[0])).toBe(minute);
+    }
   });
 
   it('covers all four spellings of a day number', () => {

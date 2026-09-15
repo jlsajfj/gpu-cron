@@ -5,12 +5,11 @@ DATA := data/out
 
 .PHONY: setup demo data canonical paraphrase assemble train train-mini train-micro train-nano train-pico train-femto eval eval-all web fixture-web test test-gpu test-demo conformance clean
 
-setup: ## create the venv and install CPU torch + numpy
+setup: node_modules ## create the venv and install CPU torch + numpy
 	python3 -m venv .venv
 	.venv/bin/pip install --upgrade pip
 	.venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
 	.venv/bin/pip install -r requirements.txt
-	npm install
 
 canonical: ## cron -> canonical English (cronstrue), validated by cron-parser
 	node data/build-canonical.mjs
@@ -54,7 +53,12 @@ eval-all: ## evaluate every run, then re-render the README's results table
 	done
 	$(PY) eval/render_table.py eval/results/*.json
 
-demo: ## build and serve the demo, opening a browser (the thing to run after a clone)
+# Not .PHONY: the stamp is the directory itself, so npm ci reruns only when the lockfile moves.
+node_modules: package-lock.json
+	npm ci
+	@touch node_modules
+
+demo: node_modules ## build and serve the demo, opening a browser (the thing to run after a clone)
 	npm run demo
 
 web: ## export the shipped model and bundle dist/ + demo/dist/ (no inference runtime)
@@ -67,7 +71,7 @@ fixture-web: ## regenerate the fixture the GPU conformance harness pins against
 conformance: ## regenerate the Python/JS agreement fixture
 	$(PY) grammar/generate_conformance.py
 
-test: ## python tests + typecheck + unit tests
+test: node_modules ## python tests + typecheck + unit tests
 	$(PY) -m unittest discover -s tests -v
 	npm run typecheck
 	npm test
