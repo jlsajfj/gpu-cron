@@ -42,7 +42,6 @@ describe('public API', () => {
       api.NoWebGpuError,
       api.NoModelError,
       api.InferenceFailedError,
-      api.UngrammaticalError,
       api.InputTooLongError,
     ]) {
       expect(Object.create(cls.prototype)).toBeInstanceOf(api.CronError);

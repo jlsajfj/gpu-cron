@@ -47,17 +47,6 @@ export class InferenceFailedError extends CronError {
 }
 
 /**
- * The decoder could not finish a legal expression within its budget.
- *
- * This should be unreachable: the automaton cannot enter a state it is unable to close
- * before the cap, and it has never fired across ~21,000 eval examples. It indicates a bug
- * in this package, not a problem with the input — please report it.
- */
-export class UngrammaticalError extends CronError {
-  override name = 'UngrammaticalError';
-}
-
-/**
  * The prompt does not fit in the model's context alongside the answer it has to produce.
  *
  * Input-specific and recoverable: shorten the text. Nothing is truncated on your behalf —
@@ -208,7 +197,12 @@ export async function parse(text: string, options: ParseOptions = {}): Promise<C
 
   const decoded = await decode(text, runtime.runtime.logits, { automaton: defaultAutomaton() });
   if (decoded.truncated || !isWellFormed(decoded.text)) {
-    throw new UngrammaticalError(`could not finish ${JSON.stringify(text)} within the grammar`);
+    // Unreachable: the automaton cannot enter a state it is unable to close before the cap.
+    // Not a parse outcome and not something a caller can act on — if it fires, this package
+    // is broken, so it is an invariant failure rather than a branchable error class.
+    throw new CronError(
+      `human-cron invariant violated on ${JSON.stringify(text)} — this is a bug, please report it`,
+    );
   }
 
   return {
