@@ -5,6 +5,9 @@ export const VOCAB_SIZE = 259;
 
 export const PROMPT_SUFFIX = ' => ';
 
+/** BOS plus the separator: what a prompt costs before any of its own characters. */
+export const PROMPT_OVERHEAD = 1 + PROMPT_SUFFIX.length;
+
 // Day and month names in the corpus are capitalized ~99.95% of the time (6,388 "Tuesday"
 // against 0 "tuesday"), and the vocabulary is bytes, so the capitalized form is a different
 // sequence the model would otherwise never see. Lowercasing here — rather than duplicating

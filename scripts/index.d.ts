@@ -42,10 +42,18 @@ export declare class NoModelError extends CronError {}
 export declare class InferenceFailedError extends CronError {}
 
 /**
- * The model could not finish a legal expression within the length cap. Unlike the others
- * this is input-specific and worth retrying: a different phrasing may work.
+ * The decoder could not finish a legal expression within its budget. This should be
+ * unreachable — the automaton cannot enter a state it is unable to close — so it indicates
+ * a bug in this package rather than a problem with your input. Please report it.
  */
 export declare class UngrammaticalError extends CronError {}
+
+/**
+ * The prompt does not fit in the model's context alongside the answer it must produce.
+ * Input-specific and recoverable: shorten the text. Nothing is truncated on your behalf,
+ * since a silently clipped prompt decodes to a schedule nobody asked for.
+ */
+export declare class InputTooLongError extends CronError {}
 
 /**
  * Whether this environment can run the model.

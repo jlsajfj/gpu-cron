@@ -95,11 +95,19 @@ Branch with `instanceof`, not on strings. Everything descends from `CronError`.
 | `NoWebGpuError` | no WebGPU adapter — this is what Node gets | no |
 | `NoModelError` | the build has no weights inlined; a packaging bug | no |
 | `InferenceFailedError` | WebGPU present, but the pipeline would not load or a run threw | no |
-| `UngrammaticalError` | the model could not finish a legal expression within the length cap | **yes** — try a different phrasing |
+| `InputTooLongError` | the prompt does not fit alongside the answer | **yes** — shorten the input |
+| `UngrammaticalError` | the decoder could not close a legal expression | no — this should be unreachable; please report it |
 
-The first three latch and are what `unavailable()` returns. Only `UngrammaticalError` is
-per-input, and it is the only one worth retrying — so disable your UI on the others, and
-show an inline message for that one.
+The first three latch and are what `unavailable()` returns: disable your UI on those.
+`InputTooLongError` is per-input, so show an inline message and leave the field enabled.
+
+`UngrammaticalError` is an internal invariant check rather than a user-facing condition.
+The automaton cannot enter a state it is unable to close before the cap, and it has not
+fired across ~21,000 eval examples or any adversarial probe. If you see it, it is a bug
+here.
+
+**Nothing is truncated on your behalf.** An over-long prompt is a hard error, because a
+silently clipped prompt decodes to a schedule nobody asked for.
 
 ### `backend(): Backend | null`
 

@@ -10,6 +10,7 @@ export type FailureReason = 'no-model' | 'no-webgpu' | 'inference-failed';
 
 export interface Runtime {
   adapter: string;
+  maxLen: number;
   modelBytes: number;
   modelName: string;
   params: number;
@@ -72,6 +73,7 @@ export async function loadRuntime(): Promise<RuntimeResult> {
       ok: true,
       runtime: {
         adapter: gpu.adapter,
+        maxLen: MANIFEST.max_len,
         modelBytes: MODEL_BYTES,
         modelName: MODEL_NAME,
         params,

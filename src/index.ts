@@ -3,6 +3,7 @@
 // grammar automaton — is internal and set up once, on whichever of the two is called first.
 
 import { defaultAutomaton, isWellFormed } from './automaton.js';
+import { PROMPT_OVERHEAD } from './tokenizer.js';
 import { nextFireTimes } from './cron.js';
 import { decode } from './decode.js';
 import { type FailureReason, latchedFailure, loadRuntime } from './runtime.js';
@@ -46,11 +47,24 @@ export class InferenceFailedError extends CronError {
 }
 
 /**
- * The model could not finish a legal expression within the length cap. Unlike the others
- * this is input-specific and worth retrying: a different phrasing may well work.
+ * The decoder could not finish a legal expression within its budget.
+ *
+ * This should be unreachable: the automaton cannot enter a state it is unable to close
+ * before the cap, and it has never fired across ~21,000 eval examples. It indicates a bug
+ * in this package, not a problem with the input — please report it.
  */
 export class UngrammaticalError extends CronError {
   override name = 'UngrammaticalError';
+}
+
+/**
+ * The prompt does not fit in the model's context alongside the answer it has to produce.
+ *
+ * Input-specific and recoverable: shorten the text. Nothing is truncated on your behalf —
+ * a silently clipped prompt would decode to a schedule you never asked for.
+ */
+export class InputTooLongError extends CronError {
+  override name = 'InputTooLongError';
 }
 
 const BY_REASON: Record<FailureReason, new (message: string) => CronError> = {
@@ -184,6 +198,13 @@ export function backend(): Backend | null {
 export async function parse(text: string, options: ParseOptions = {}): Promise<CronMatch> {
   const runtime = await load();
   if (!runtime.ok) throw unavailable() ?? new CronError(runtime.message);
+
+  const budget = runtime.runtime.maxLen - PROMPT_OVERHEAD - defaultAutomaton().grammar.maxLength - 1;
+  if (text.length > budget) {
+    throw new InputTooLongError(
+      `prompt is ${text.length} characters; the model fits ${budget} alongside its answer`,
+    );
+  }
 
   const decoded = await decode(text, runtime.runtime.logits, { automaton: defaultAutomaton() });
   if (decoded.truncated || !isWellFormed(decoded.text)) {

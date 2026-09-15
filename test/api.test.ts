@@ -38,7 +38,13 @@ describe('public API', () => {
   });
 
   it('every failure class descends from CronError', () => {
-    for (const cls of [api.NoWebGpuError, api.NoModelError, api.InferenceFailedError, api.UngrammaticalError]) {
+    for (const cls of [
+      api.NoWebGpuError,
+      api.NoModelError,
+      api.InferenceFailedError,
+      api.UngrammaticalError,
+      api.InputTooLongError,
+    ]) {
       expect(Object.create(cls.prototype)).toBeInstanceOf(api.CronError);
     }
   });

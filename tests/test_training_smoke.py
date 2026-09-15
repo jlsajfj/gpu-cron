@@ -117,7 +117,7 @@ class TestTrainingSmoke(unittest.TestCase):
         from model import Config, TinyCronLM
 
         torch.manual_seed(0)
-        model = TinyCronLM(Config(d_model=64, n_layer=2, n_head=2, d_ff=128, max_len=128))
+        model = TinyCronLM(Config(d_model=64, n_layer=2, n_head=2, d_ff=128, max_len=192))
         texts = [
             "every 5 minutes",
             "at 9:15 in the morning on the first day of every month",

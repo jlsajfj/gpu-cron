@@ -28,7 +28,7 @@ class ConstrainedDecoder:
         self,
         model,
         automaton: CronAutomaton | None = None,
-        max_new: int = 72,
+        max_new: int | None = None,
         temperature: float = 0.0,
         top_k: int = 0,
         constrain: bool = True,
@@ -36,7 +36,10 @@ class ConstrainedDecoder:
         self.model = model
         self.constrain = constrain
         self.automaton = automaton or default_automaton()
-        self.max_new = max_new
+        # Derived, not a magic number: every legal move adds one character and the automaton
+        # cannot enter a state it could not close, so maxLength + 1 (for EOS) is exactly
+        # enough. src/decode.ts computes the same budget the same way.
+        self.max_new = max_new if max_new is not None else self.automaton.grammar.max_length + 1
         self.temperature = temperature
         self.top_k = top_k
         self._mask_cache: dict[tuple[int, str, int], torch.Tensor] = {}
@@ -77,6 +80,14 @@ class ConstrainedDecoder:
         self.model.eval()
 
         prompts = [[BOS, *(t.lower() + PROMPT_SUFFIX).encode("utf-8")] for t in texts]
+        # A prompt that does not leave room for the answer is a hard error, never a silent
+        # truncation: a clipped prompt decodes to a schedule the caller never asked for.
+        budget = self.model.cfg.max_len - self.automaton.grammar.max_length - 1
+        for text, prompt in zip(texts, prompts):
+            if len(prompt) > budget:
+                raise ValueError(
+                    f"prompt is {len(prompt)} tokens; the model fits {budget} alongside its answer: {text[:60]!r}"
+                )
         lengths = [len(p) for p in prompts]
         width = max(lengths)
         idx = torch.full((len(prompts), width), PAD, dtype=torch.long, device=device)
