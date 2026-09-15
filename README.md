@@ -52,6 +52,34 @@ if (!(await isAvailable())) {
 }
 ```
 
+**It returns the same promise object every call.** That is a guarantee, not an
+implementation detail — React's `use()` and every Suspense cache key on promise identity,
+and a function that minted a fresh promise per render would suspend forever. So it can be
+handed straight to a framework:
+
+```jsx
+// React 19
+function Parser() {
+  if (!use(isAvailable())) return <PlainCronInput />;
+  return <ModelInput />;
+}
+```
+
+```svelte
+<!-- Svelte: {#await} is the same idea, and will not restart on re-render -->
+<script>
+  import { isAvailable, parse } from 'human-cron';
+  const ready = isAvailable();
+</script>
+
+{#await ready then ok}
+  <input disabled={!ok} title={ok ? '' : 'GPU not available'} />
+{/await}
+```
+
+`parse()` deliberately does *not* do this — it is per-input, and a library-owned cache
+keyed on user text is a memory leak. Cache it yourself if you want to suspend on a parse.
+
 ### `parse(text, options?): Promise<CronMatch>`
 
 ```ts
