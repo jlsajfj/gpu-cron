@@ -1,0 +1,41 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+
+      # The tag is the source of truth; a mismatched package.json would publish the wrong version.
+      - name: tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          [ "$tag" = "$pkg" ] || { echo "tag v$tag != package.json $pkg"; exit 1; }
+
+      - run: npm test
+
+      # Rebuild from the committed weights and fail if the bundle differs from what was committed.
+      - name: bundle matches committed weights
+        run: |
+          npm run build
+          git diff --exit-code || { echo "build output differs from the committed tree"; exit 1; }
+
+      # Trusted publishing (OIDC) needs npm >= 11.5.1; setup-node's bundled npm is older.
+      - run: npm install -g npm@latest
+
+      - run: npm publish --provenance --access public
