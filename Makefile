@@ -40,7 +40,7 @@ train-femto: ## 86k params
 train-pico: ## 45k params -- the model the browser demo ships
 	$(PY) train/train.py --config configs/pico.json --out runs/pico --bf16
 
-CKPT ?= runs/pico/checkpoint.pt
+CKPT ?= runs/pico7/checkpoint.pt
 
 eval: ## exact + semantic match on the held-out splits (CKPT=runs/<run>/checkpoint.pt)
 	$(PY) eval/evaluate.py --checkpoint $(CKPT) --out eval/results/$(notdir $(patsubst %/,%,$(dir $(CKPT)))).json

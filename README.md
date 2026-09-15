@@ -119,6 +119,14 @@ unlikely. It is **not** guaranteed to be the schedule you meant. This is a 45k-p
 model with no way to signal that it did not understand you: nonsense input yields a
 confident, valid, meaningless expression. Show the user what you parsed.
 
+**Concurrent calls are safe.** They are serialized internally and resolve in call order,
+so a UI can fire one per keystroke without queueing or cancelling them itself:
+
+```js
+// no coordination needed on your side
+const [a, b] = await Promise.all([parse('every tuesday at 3pm'), parse('every 15 minutes')]);
+```
+
 Throws `CronError` on failure.
 
 ### `CronError`

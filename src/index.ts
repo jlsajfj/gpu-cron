@@ -35,8 +35,19 @@ export interface Backend {
 }
 
 let ready: ReturnType<typeof loadRuntime> | null = null;
+let queue: Promise<unknown> = Promise.resolve();
 let resolved: Backend | null = null;
 let availability: Promise<boolean> | null = null;
+
+// One GPU buffer is mapped per decode, so two in flight would collide on mapAsync.
+function serialize<T>(run: () => Promise<T>): Promise<T> {
+  const result = queue.then(run, run);
+  queue = result.then(
+    () => {},
+    () => {},
+  );
+  return result;
+}
 
 // Both entry points share one load, so calling isAvailable() first makes parse() warm
 // instead of doing the GPU upload twice.
@@ -70,7 +81,8 @@ async function load() {
  * milliseconds). That work is shared with `parse()`, so calling this first makes the
  * first `parse()` fast rather than doing the work twice. Repeat calls are free.
  *
- * If you need to know *why* it is unavailable, call `parse()` and read `error.reason`.
+ * If you need to know *why* it is unavailable, call `parse()` and read the thrown
+ * {@link CronError}'s message.
  *
  * The same promise object is returned every call, so it works directly with React's
  * `use()` and with Suspense caches that key on identity:
@@ -113,8 +125,11 @@ export function backend(): Backend | null {
  * 45k-parameter model, and there is no way for it to signal that it did not understand
  * you. Nonsense input yields a confident, valid, meaningless expression.
  *
- * Throws {@link CronError} with a `reason` — see {@link CronErrorReason}. Guard with
- * {@link isAvailable} if you would rather branch than catch.
+ * Throws {@link CronError} when there is no usable GPU. Guard with {@link isAvailable}
+ * if you would rather branch than catch.
+ *
+ * Concurrent calls are safe: they are serialized internally and resolve in call order, so
+ * a UI can fire one per keystroke without cancelling or queueing them itself.
  *
  * @param text  free-form English, e.g. `"every second tuesday at 9"`
  * @param options.count  how many upcoming fire times to return (default 5)
@@ -130,7 +145,9 @@ export async function parse(text: string, options: ParseOptions = {}): Promise<C
     );
   }
 
-  const decoded = await decode(text, runtime.runtime.logits, { automaton: defaultAutomaton() });
+  const decoded = await serialize(() =>
+    decode(text, runtime.runtime.logits, { automaton: defaultAutomaton() }),
+  );
   if (decoded.truncated || !isWellFormed(decoded.text)) {
     // Unreachable: the automaton cannot enter a state it is unable to close before the cap.
     // Not a parse outcome and not something a caller can act on — if it fires, this package

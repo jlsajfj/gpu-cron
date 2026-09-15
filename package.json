@@ -1,6 +1,6 @@
 {
   "name": "gpu-cron",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Natural language to cron, decoded through a cron-grammar automaton so the output is valid by construction",
   "type": "module",
   "main": "./dist/index.js",
@@ -21,13 +21,14 @@
     "pretypecheck": "npm run generate",
     "pretest": "npm run generate",
     "build": "node scripts/build.mjs --minify",
-    "prepublishOnly": "npm run build && npm test",
+    "prepublishOnly": "node scripts/prepublish-check.mjs",
     "demo": "node scripts/build.mjs && node scripts/serve.mjs --open",
     "serve": "node scripts/serve.mjs",
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:gpu": "node scripts/gpu-test.mjs",
+    "test:reentrancy": "node scripts/reentrancy-test.mjs",
     "test:demo": "node scripts/demo-test.mjs"
   },
   "keywords": [
