@@ -8,11 +8,30 @@ Natural language to cron, running entirely in your browser.
 "every second hour"            ->  0 */2 * * *
 ```
 
-A **45,376 parameter** transformer, trained from scratch on a generated dataset of
-(English phrasing, cron expression) pairs, plus a constrained decoder that masks the
-model's logits against a grammar automaton so every emitted string is valid cron *by
-construction*. Weights are inlined in the page: no server, no API call, no
-post-processing.
+## Why
+
+Cron is write-only. Nobody remembers which field is day-of-month and which is day-of-week,
+so people paste a description into a web tool — which means sending your schedule to
+someone else's server to get eleven characters back.
+
+This runs locally. The whole thing is **89 KB of JavaScript** with the model inlined: no
+network call, no API key, no inference runtime to download, nothing to keep running.
+
+It fits in 89 KB because the model never has to learn cron *syntax*. A grammar automaton
+masks the decoder at every step, so an invalid expression is unreachable rather than
+unlikely — validity is a property of the decoder, not a score the model has to earn. That
+leaves the model with one job, deciding which numbers go where, and that turns out to be a
+**45,376 parameter** problem.
+
+The second reason it exists is to find out how small "small" can be while the answer is
+still useful. The [Results](#results) and [Limitations](#limitations) are honest about
+where that lands.
+
+## Install
+
+```bash
+npm install human-cron
+```
 
 ```js
 import { isAvailable, parse } from 'human-cron';
